@@ -1,0 +1,9 @@
+## Interface: 30100
+## Title: oUF_|cff336633TagEditor|r
+## Author: Smee
+## X-eMail: airtonix@gmail.com
+## Version: 30100.001
+## RequiredDeps: oUF
+## DefaultState: enabled
+
+core.lua
