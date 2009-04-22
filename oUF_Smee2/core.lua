@@ -979,65 +979,12 @@ function addon:OnEnable()
 	
 	oUF:RegisterStyle("normal", self.Layout)
 	oUF:SetActiveStyle("normal")
-	oUF_Player = oUF:Spawn("player","oUF_Player")
-	oUF_Player:SetPoint(
-		db.frames.units.player.anchorFromPoint,
-		oUF.units[db.frames.units.player.anchorTo] or UIParent,
-		db.frames.units.player.anchorToPoint,
-		db.frames.units.player.anchorX,
-		db.frames.units.player.anchorY)
-	self.units.target = oUF:Spawn("target","oUF_Target")
-	self.units.target:SetPoint(
-		db.frames.units.target.anchorFromPoint,
-		oUF.units[db.frames.units.target.anchorTo] or UIParent,
-		db.frames.units.target.anchorToPoint,
-		db.frames.units.target.anchorX,
-		db.frames.units.target.anchorY)
-	self.units.focus = oUF:Spawn("focus","oUF_Focus")
-	self.units.focus:SetPoint(
-		db.frames.units.focus.anchorFromPoint,
-		oUF.units[db.frames.units.focus.anchorTo] or UIParent,
-		db.frames.units.focus.anchorToPoint,
-		db.frames.units.focus.anchorX,
-		db.frames.units.focus.anchorY)
-	self.units.targettarget = oUF:Spawn("targettarget","oUF_TargetTarget")
-	self.units.targettarget:SetPoint(
-		db.frames.units.targettarget.anchorFromPoint,
-		oUF.units[db.frames.units.targettarget.anchorTo] or UIParent,
-		db.frames.units.targettarget.anchorToPoint,
-		db.frames.units.targettarget.anchorX,
-		db.frames.units.targettarget.anchorY)
-	self.units.focustarget = oUF:Spawn("focustarget","oUF_FocusTarget")
-	self.units.focustarget:SetPoint(
-		db.frames.units.focustarget.anchorFromPoint,
-		oUF.units[db.frames.units.focustarget.anchorTo] or UIParent,
-		db.frames.units.focustarget.anchorToPoint,
-		db.frames.units.focustarget.anchorX,
-		db.frames.units.focustarget.anchorY)
-	self.units.pet = oUF:Spawn("pet","oUF_Pet")
-	self.units.pet:SetPoint(
-		db.frames.units.pet.anchorFromPoint,
-		oUF.units[db.frames.units.pet.anchorTo] or UIParent,
-		db.frames.units.pet.anchorToPoint,
-		db.frames.units.pet.anchorX,
-		db.frames.units.pet.anchorY)	
-	self.units.pettarget = oUF:Spawn("pettarget","oUF_PetTarget")
-	self.units.pettarget:SetPoint(
-		db.frames.units.pettarget.anchorFromPoint,
-		oUF.units[db.frames.units.pettarget.anchorTo] or UIParent,
-		db.frames.units.pettarget.anchorToPoint,
-		db.frames.units.pettarget.anchorX,
-		db.frames.units.pettarget.anchorY)	
-		
-	self.units = {
-		['player'] = oUF_Player,
-		['target'] = oUF_Target,
-		['targettarget'] = oUF_TargetTarget,
-		['focus'] = oUF_Focus,
-		['focustarget'] = oUF_FocusTarget,
-		['pet'] = oUF_Pet,
-		['pettarget'] = oUF_PetTarget,
-	}
+
+	for index,frame in pairs(db.frames.units)do
+		local udb = db.frames.units[index]
+		self.units[index] = oUF:Spawn"player"
+		self.units[index]:SetPoint( udb.anchorFromPoint, oUF.units[udb.anchorTo] or UIParent, udb.anchorToPoint, udb.anchorX, udb.anchorY)		
+	end
 
 end
 
