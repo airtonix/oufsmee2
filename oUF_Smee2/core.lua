@@ -980,10 +980,9 @@ function addon:OnEnable()
 	oUF:RegisterStyle("normal", self.Layout)
 	oUF:SetActiveStyle("normal")
 
-	for index,frame in pairs(db.frames.units)do
-		local udb = db.frames.units[index]
-		self.units[index] = oUF:Spawn"player"
-		self.units[index]:SetPoint( udb.anchorFromPoint, oUF.units[udb.anchorTo] or UIParent, udb.anchorToPoint, udb.anchorX, udb.anchorY)		
+	for unit,data in pairs(db.frames.units)do
+		self.units[unit] = oUF:Spawn(unit)
+		self.units[unit]:SetPoint( data.anchorFromPoint, self.units[data.anchorTo] or UIParent, data.anchorToPoint, data.anchorX, data.anchorY)		
 	end
 
 end
