@@ -179,9 +179,9 @@ end
 	AURA UPDATE HOOKS
 ----------------------------------------]]--
 
-local function SetAuraPosition(self, icons, x)
+local function SetAuraPosition(self, icons, count)
 	addon:Debug("Repositioning auras.")
-	if(icons and x > 0) then
+	if(icons and count > 0) then
 		local col,row = 0,0
 		local spacing = icons.spacing or 0
 		local size = (icons.size or 16) + spacing
@@ -191,7 +191,7 @@ local function SetAuraPosition(self, icons, x)
 		local cols = icons.Colomns
 --		local rows = icons.Rows  -- Right now only horizontally conditioned aura frames are supported
 
-		for i = 1, x do
+		for i = 1, count do
 			local button = icons[i]
 			if(button and button:IsShown()) then
 				if(icons.gap and button.debuff) then
@@ -227,8 +227,14 @@ local function PostUpdateAuraIcon(self,icons, unit, icon, index, offset, filter,
 --	if(index > icons.num)then icons[index]:Hide() end
 end
 
+local function sizeAuraIcon(icon,size)
+	icon:SetWidth(size)
+	icon:SetHeight(size)
+end
+
 local function updateAuraIcon(self,event)
 	local db = addon.db.profile
+	local auraGroup = self:GetParent()
 	local name,size,outline = (addon.LSM:Fetch('font',db.auras.font.name) or self.db.profile.fonts.default), db.auras.font.size, db.auras.font.outline
 	self.count:SetFont(name,size,outline)
 	if(self.duration~=nil and self.timeLeft~=nil) then 
@@ -249,15 +255,11 @@ local function updateAuraIcon(self,event)
 			self.overlay:Hide()
 		end
 	end
-	if(addon.build.tocversion >= 30100)then
-		self:SetScale((self.owner == 'player' ) and self:GetParent().playerSize  or 1)
-		local frameUnit = self.parent:GetParent().unit
-		if frameUnit and self.owner then
-			local frameOwner, buffOwner = UnitGUID(frameUnit),UnitGUID(self.owner)
-			if frameUnit ~='player' and buffOwner == frameOwner then self.ownership:Show() else self.ownership:Hide() end
-		end
-	else
-		self:SetScale(self.isPlayer and self:GetParent().playerSize  or 1)
+	if self.owner == 'player' then sizeAuraIcon(self,auraGroup.size*auraGroup.playerSize) end
+	local frameUnit = self.parent:GetParent().unit
+	if frameUnit and self.owner then
+		local frameOwner, buffOwner = UnitGUID(frameUnit),UnitGUID(self.owner)
+		if frameUnit ~='player' and buffOwner == frameOwner then self.ownership:Show() else self.ownership:Hide() end
 	end
 end
 
@@ -318,7 +320,7 @@ function addon:makeAuraFrame(obj,auraTypes)
 			auraFrame["growth-y"] = db["growth-y"]
 			auraFrame.filter = db.filter
 			auraFrame.onlyShowPlayer = db.onlyShowPlayer or nil
-			db.setup = false;
+			auraFrame.setup = db.setup
 		obj[auraType] = auraFrame;
 	end
 end
@@ -953,7 +955,7 @@ end
 
 function addon:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New(layoutName.."DB",oUF_Smee_Settings)
-	self.enabledDebugMessages = addon.db.profile.enabledDebugMessages
+	self.enabledDebugMessages = self.db.profile.enabledDebugMessages
 	self.units = {}
 	self.Layout = layout
 	self:HideBlizzard()

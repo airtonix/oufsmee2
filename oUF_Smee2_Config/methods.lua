@@ -169,6 +169,10 @@ function configAddon:SetAuraFontOptions(obj,size,name,outline)
 --	 end
 end
 
+function configAddon:ToggleAuraConfigMode(object,value)
+	object.setup = value
+	object:GetParent():UpdateElement('Aura')
+end
 function configAddon:adjustAuraFrame(object,setting,value)
 	self:Debug("adjustAuraFrame("..tostring(object)..","..setting..","..value..")")
 	object[setting]=value
@@ -248,16 +252,6 @@ function configAddon:EnableObject(obj,value)
 	end
 end
 
-function configAddon:ToggleConfigAssist(object)
-	if(object:GetBackdrop()~=nil)then
-		self:Print("Hiding Backdrop")
-		object:SetBackdrop(nil)
-	else
-		self:Print("Showing Backdrop")
-		object:SetBackdrop(addon.db.profile.textures.backgrounds.default)
-		object:SetBackdropColor(0,0,0,.5)	
-	end
-end
 
 function configAddon:PositionFontObject(object,settings)
 	object:ClearAllPoints()
@@ -431,7 +425,7 @@ function configAddon:SetUnitFrameOption(info,value)
 	elseif setting == "inRangeAlpha" or setting == "outsideRangeAlpha" then
 		object.setting = value
 	elseif setting == "setup" then
-		self:ToggleConfigAssist(object)
+		self:ToggleAuraConfigMode(object,value)
 	elseif parent =="textures" then
 		self:UpdateTextures(info['arg'],output)
 	end

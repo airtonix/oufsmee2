@@ -121,9 +121,14 @@ local updateIcon = function(self, unit, icons, index, offset, filter, isDebuff, 
 	if(not icon) then
 		icon = (self.CreateAuraIcon or createAuraIcon) (self, icons, index, isDebuff)
 	end
-
 	local name, rank, texture, count, dtype, duration, timeLeft, caster = UnitAura(unit, index, filter)
 	local show = (self.CustomAuraFilter or customFilter) (icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
+
+	if icons.setup then 
+		name, rank, texture, count, dtype, duration, timeLeft, caster = "Mark of the Wild", "Rank 6", "Interface\\Icons\\Spell_Nature_Regeneration", 0, "Magic", 1800, 2877.147, "player", nil
+		show = true
+	end
+	
 	if(show) then
 		if(not icons.disableCooldown and duration and duration > 0) then
 			icon.cd:SetCooldown(timeLeft - duration, duration)
@@ -209,7 +214,7 @@ local Update = function(self, event, unit)
 		local buffs = auras.numBuffs or 32
 		local debuffs = auras.numDebuffs or 40
 		local max = debuffs + buffs
-
+		
 		local visibleBuffs, visibleDebuffs = 0, 0
 		for index = 1, max do
 			if(index > buffs) then
