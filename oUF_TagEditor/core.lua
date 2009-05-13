@@ -7,6 +7,14 @@ oUF.TagEvents["[status]"] = "UNIT_HEALTH PLAYER_UPDATE_RESTING PLAYER_FLAGS_CHAN
 oUF.TagEvents["[afk]"] = "UNIT_HEALTH PLAYER_UPDATE_RESTING PLAYER_FLAGS_CHANGED"
 oUF.TagEvents["[shortName]"] = "UNIT_NAME_UPDATE"
 
+-- TODO: 
+--  oUF.TagsLogicStrings = {
+--  	[tag] = {
+--			[name]		= [[function(u) end]],
+--			[event]	= ""
+-- 	}
+-- }
+
 oUF.TagsLogicStrings = {
 	["[class]"]       			= [[function(u) return UnitClass(u) end]],
 	["[creature]"]    		= [[function(u) return UnitCreatureFamily(u) or UnitCreatureType(u) end]],
@@ -87,6 +95,11 @@ end]],
  local c = UnitClassification(u)
  return c == "rare" and "R" or c == "eliterare" and "R+" or c == "elite" and "+" or c == "worldboss" and "B"
 end]],
+	["[abbreviatedname]"] = [[function(u)
+ local name = UnitName(u)
+ return (string.len(name) > 10) and string.gsub(name, "%s?(.)%S+%s", "%1. ") or name
+end
+	]]
 }
 function oUF:ReWriteTag(tag,events,logic)
 	if logic then 

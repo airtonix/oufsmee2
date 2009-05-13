@@ -67,6 +67,9 @@ oUF_Smee_Settings = {
 				default = "Interface\\Addons\\oUF_Smee2\\media\\borders\\default",
 				slimbuff = "Interface\\Addons\\oUF_Smee2\\media\\borders\\slim-buff",
 				slimunit = "Interface\\Addons\\oUF_Smee2\\media\\borders\\slim-unit",
+				dek_retro_round_v2 = "Interface\\Addons\\oUF_Smee2\\media\\borders\\dek_retro_round_v2",
+				dek_lyt = "Interface\\Addons\\oUF_Smee2\\media\\borders\\dek_lyt.tga",
+				
 			},
 		},
 		fonts = { 
@@ -535,7 +538,7 @@ oUF_Smee_Settings = {
 							anchorY = -1,
 							justifyH = "RIGHT",
 							justifyV = "MIDDLE",
-							tag = "[difficulty][shortclassification][level] [name] [dead]",
+							tag = "[difficulty][shortclassification][level] [abbreviatedname] [dead]",
 							desc = "Name",
 							font = {
 								size = 8.5,

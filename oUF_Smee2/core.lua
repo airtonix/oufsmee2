@@ -178,6 +178,19 @@ end
 --[[----------------------------------------
 	AURA UPDATE HOOKS
 ----------------------------------------]]--
+local function customFilter(icons, unit, icon, name)
+	local db = addon.db.profile.frames[unit]
+	local unitname = UnitName(unit)
+	
+	if(db.WhiteListAuras and db.AuraWhiteList[unitname]~=nil)then
+		if(db.AuraWhiteList[unitname][name]) then return true end
+	elseif(db.BlackListAuras and db.AuraBlackList[unitname]~=nil)then
+		if(db.AuraWhiteList[unitname][name]) then return false end
+	else
+		return true
+	end
+	
+end
 
 local function SetAuraPosition(self, icons, count)
 	addon:Debug("Repositioning auras.")
@@ -190,7 +203,10 @@ local function SetAuraPosition(self, icons, count)
 		local growthy = (icons["growth-y"] == "DOWN" and -1) or 1
 		local cols = icons.Colomns
 --		local rows = icons.Rows  -- Right now only horizontally conditioned aura frames are supported
-
+		local IndexOfLlargestIconInThisRow = 1
+		local previousIconSize = 0
+		local nextRowYPoint = 0
+		
 		for i = 1, count do
 			local button = icons[i]
 			if(button and button:IsShown()) then
@@ -198,22 +214,57 @@ local function SetAuraPosition(self, icons, count)
 					if(col > 0) then col = col + 1 end
 					icons.gap = false
 				end
-				if(col >= cols) then col,row = 0, row + 1 end
+				previousIconSize = (icons[i]:GetHeight()>previousIconSize)and icons[i]:GetHeight() or previousIconSize
+				
+				if(col >= cols) then 
+					col,row = 0, row + 1 ;
+					if growthy > 0 then 
+						nextRowYPoint = nextRowYPoint + (previousIconSize + spacing)
+					else
+						nextRowYPoint = nextRowYPoint - (previousIconSize + spacing)
+					end
+					previousIconSize = 0
+				end
+				
 				local anchorFrom,anchorObj,anchorTo
 				local vert = icons["growth-y"] == 'UP' and 'BOTTOM' or 'TOP'
+				
+
 				if growthx < 0 then -- <<<<
-					anchorFrom,anchorObj,anchorTo,anchorX,anchorY = vert.."RIGHT",icons[i-1],vert.."LEFT",-spacing, 0
-					if i == 1 or col == 0 then anchorObj,anchorTo,anchorY =  icons,vert.."RIGHT", (row * size * growthy) end
+					anchorFrom		= vert.."RIGHT"
+					anchorObj		= icons[i-1]
+					anchorTo			= vert.."LEFT"
+					anchorX			= -spacing
+					anchorY			= 0
+
+					if i == 1 or col == 0 then 
+						anchorObj	= icons
+						anchorTo		= vert.."RIGHT"
+						anchorY 		= nextRowYPoint
+					end
+					
 				else -- >>>>
-					anchorFrom,anchorObj,anchorTo,anchorX,anchorY = vert.."LEFT",icons[i-1],vert.."RIGHT",spacing,0
-					if i == 1 or col == 0 then anchorObj,anchorTo,anchorY = icons,vert.."LEFT", (row * size * growthy) end
+					anchorFrom		= vert.."LEFT"
+					anchorObj		= icons[i-1]
+					anchorTo			= vert.."RIGHT"
+					anchorX			= spacing
+					anchorY			= 0
+					
+					if i == 1 or col == 0 then
+						anchorObj	= icons
+						anchorTo		= vert.."LEFT"
+						anchorY 		= nextRowYPoint						
+					end
+					
 				end
+				
 				addon:Debug("placing aura[".. i.."]"..anchorFrom..":"..tostring(anchorObj)..":"..anchorTo..":"..anchorX..":"..anchorY..".")
 				button:SetWidth(icons.size)
 				button:SetHeight(icons.size)
 				button:ClearAllPoints()
 				button:SetPoint(anchorFrom, anchorObj, anchorTo, anchorX, anchorY)
 				col = col + 1
+				
 			end			
 		end
 	end
@@ -244,6 +295,7 @@ local function updateAuraIcon(self,event)
 			if(self.duration > 0 or self.timeLeft > 0) then	
 				self.overlay:SetParent(self.cd)
 				local timeLeft = self.timeLeft - GetTime()
+				if(auraGroup.setup and timeLeft <= 0)then self.timeLeft = GetTime()+math.random(1,300) end
 				local multiplier, r, g, b = GetFormattedFont(timeLeft)
 				self.overlay:SetVertexColor(r,g,b,1)
 				self.remaining:SetText(GetFormattedTime(timeLeft)) 
@@ -399,7 +451,7 @@ function makeCastBar(self)
 	end	
 
 	if self.unit == "player" and self.db.bars.Castbar.SafeZone.enabled == true then 
-		bar.SafeZone = bar:CreateTexture(nil,"ARTWORK")
+		bar.SafeZone = bar:CreateTexture(nil,"OVERLAY")
 		bar.SafeZone:SetTexture(self.textures.statusbar)
 		bar.SafeZone:SetVertexColor(unpack(self.db.bars.Castbar.SafeZone.colour))
 		bar.SafeZone:SetPoint("TOPRIGHT")
@@ -836,9 +888,9 @@ local layout = function(self, unit)
 	if IsAddOnLoaded("oUF_Banzai") then
 		self.Banzai = updateBanzai
 		self.BanzaiIndicator = power:CreateTexture(nil, "OVERLAY")
-		self.BanzaiIndicator:SetPoint("CENTER", self, 0, 0)
-		self.BanzaiIndicator:SetHeight(4)
-		self.BanzaiIndicator:SetWidth(4)
+		self.BanzaiIndicator:SetPoint("TOP", self, "TOP",0,-4)
+		self.BanzaiIndicator:SetHeight(3)
+		self.BanzaiIndicator:SetWidth(48)
 		self.BanzaiIndicator:SetTexture(1, .25, .25)
 		self.BanzaiIndicator:Hide()
 	end
@@ -869,6 +921,7 @@ local layout = function(self, unit)
 	self.PostUpdateAuraIcon = PostUpdateAuraIcon
 	self.PostUpdateHealth = PostUpdateHealth
 	self.PostUpdatePower = PostUpdatePower
+	self.CustomAuraFilter = CustomFilter
 	self:SetAttribute("initial-scale", db.frames.scale)
 	return self
 end
@@ -892,14 +945,6 @@ function addon:HideBlizzard()
 		BuffFrame:Hide()
 		BuffFrame:UnregisterAllEvents()
 	end
-end
-
-function addon:reloadui(input)
-	ReloadUI()
-end
-
-function addon:reloadgfx(input)
-	RestartGx()
 end
 
 function addon:UpdateFontObject()
@@ -938,6 +983,11 @@ function addon:ImportSharedMedia()
 	for name,path in pairs(self.db.profile.textures.statusbars)do
 		self.LSM:Register(self.LSM.MediaType.STATUSBAR, name, path)
 	end
+	
+	for name,path in pairs(self.db.profile.textures.borders)do
+		self.LSM:Register(self.LSM.MediaType.BORDER, name, path)
+	end
+	
 	for name,data in pairs(self.db.profile.fonts)do
 		self.LSM:Register(self.LSM.MediaType.FONT, name, data.name)
 	end
@@ -959,10 +1009,8 @@ function addon:OnInitialize()
 	self.units = {}
 	self.Layout = layout
 	self:HideBlizzard()
-	self:RegisterChatCommand("oufsmee", "OpenConfig")
-	self:RegisterChatCommand("rl", "reloadui")
-	self:RegisterChatCommand("rgfx", "reloadgfx")
 	self:ImportSharedMedia()
+	self:RegisterChatCommand("oufsmee", "OpenConfig")
 end
 
 function addon:OnEnable()
@@ -974,8 +1022,9 @@ function addon:OnEnable()
 		self:Disable()
 		return
 	end
-
-
+	self.AuraWhiteList={}
+	self.AuraBlackList={}
+	
 	oUF:CompileTagStringLogic()
 	self.enabledDebugMessages = false
 	

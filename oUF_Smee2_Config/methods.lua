@@ -78,6 +78,10 @@ function configAddon:UpdateTextures(object,data)
 	
 end
 
+--------------------------------
+-- PLAYERFRAME ANCHOR OBJECTS
+-- : Builds and returns a valid ace3config table to be used in a select widget
+
 function configAddon:PlayerFramesToAnchorTo()
 	local AnchorToFrames = {}
 	for frame, object in pairs(addon.units)do
@@ -86,6 +90,11 @@ function configAddon:PlayerFramesToAnchorTo()
 	AnchorToFrames['UIParent'] = 'UIParent'
 	return AnchorToFrames
 end
+
+-------------------------------
+-- Debug Exploder
+-- : Explodes and joins the info table passed around in the ace3config gui
+
 function configAddon:concatLeaves(branch)
 	local picture = ""
 		for index,value in pairs(branch) do

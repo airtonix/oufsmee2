@@ -23,6 +23,7 @@ local UnitName = UnitName
 local GetTime = GetTime
 local UnitCastingInfo = UnitCastingInfo
 local UnitChannelInfo = UnitChannelInfo
+local sendTime, lagTime
 
 local UNIT_SPELLCAST_START = function(self, event, unit, spell, spellrank)
 	if(self.unit ~= unit) then return end
@@ -37,7 +38,8 @@ local UNIT_SPELLCAST_START = function(self, event, unit, spell, spellrank)
 	endTime = endTime / 1e3
 	startTime = startTime / 1e3
 	local max = endTime - startTime
-
+	lagTime = startTime - sendTime
+	
 	castbar.castid = castid
 	castbar.duration = GetTime() - startTime
 	castbar.max = max
@@ -61,6 +63,10 @@ local UNIT_SPELLCAST_START = function(self, event, unit, spell, spellrank)
 
 	if(self.PostCastStart) then self:PostCastStart(event, unit, name, rank, text, castid) end
 	castbar:Show()
+end
+
+local UNIT_SPELLCAST_SENT = function (event, unit, spell, spellrank)
+	sendTime = GetTime()
 end
 
 local UNIT_SPELLCAST_FAILED = function(self, event, unit, spellname, spellrank, castid)
@@ -138,6 +144,7 @@ local UNIT_SPELLCAST_CHANNEL_START = function(self, event, unit, spellname, spel
 
 	endTime = endTime / 1e3
 	startTime = startTime / 1e3
+	lagTime = startTime - sendTime
 	local max = (endTime - startTime)
 	local duration = endTime - GetTime()
 
@@ -212,7 +219,8 @@ local onUpdate = function(self, elapsed)
 			local width = self:GetWidth()
 			local _, _, ms = GetNetStats()
 			-- MADNESS!
-			local safeZonePercent = (width / self.max) * (ms / 1e5)
+--			local safeZonePercent = (width / self.max) * (ms / 1e5)
+			local safeZonePercent = (lagTime / self.max)
 			if(safeZonePercent > 1) then safeZonePercent = 1 end
 			self.SafeZone:SetWidth(width * safeZonePercent)
 		end
@@ -252,11 +260,11 @@ local onUpdate = function(self, elapsed)
 			local width = self:GetWidth()
 			local _, _, ms = GetNetStats()
 			-- MADNESS!
-			local safeZonePercent = (width / self.max) * (ms / 1e5)
+--			local safeZonePercent = (width / self.max) * (ms / 1e5)
+			local safeZonePercent = (lagTime / self.max)
 			if(safeZonePercent > 1) then safeZonePercent = 1 end
 			self.SafeZone:SetWidth(width * safeZonePercent)
 		end
-
 
 		if self.Time then
 			if self.delay ~= 0 then
@@ -295,12 +303,17 @@ local Enable = function(object, unit)
 			object:RegisterEvent("UNIT_SPELLCAST_START", UNIT_SPELLCAST_START)
 			object:RegisterEvent("UNIT_SPELLCAST_FAILED", UNIT_SPELLCAST_FAILED)
 			object:RegisterEvent("UNIT_SPELLCAST_STOP", UNIT_SPELLCAST_STOP)
+			object:RegisterEvent("UNIT_SPELLCAST_SENT", UNIT_SPELLCAST_SENT)
+			
 			object:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", UNIT_SPELLCAST_INTERRUPTED)
 			object:RegisterEvent("UNIT_SPELLCAST_DELAYED", UNIT_SPELLCAST_DELAYED)
+			
 			object:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START", UNIT_SPELLCAST_CHANNEL_START)
 			object:RegisterEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", UNIT_SPELLCAST_CHANNEL_UPDATE)
+			
 			object:RegisterEvent("UNIT_SPELLCAST_CHANNEL_INTERRUPTED", 'UNIT_SPELLCAST_INTERRUPTED')
 			object:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP", UNIT_SPELLCAST_CHANNEL_STOP)
+			
 		end
 
 		castbar:SetScript("OnUpdate", object.OnCastbarUpdate or onUpdate)
