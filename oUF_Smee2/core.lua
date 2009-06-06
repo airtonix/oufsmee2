@@ -175,21 +175,62 @@ local function PostUpdatePower(self, event, unit, bar, min, max)
 	end
 end
 
+-- CASTBAR
+local function CastbarPostCastStart(self, event, unit, name, rank, text, castid)
+end
+local function CastbarPostCastFailed(self, event, unit, spellname, spellrank, castid)
+end
+local function CastbarPostCastInterrupted(self, event, unit, spellname, spellrank, castid)
+end
+local function CastbarPostCastDelayed(self, event, unit, name, rank, text)
+end
+local function CastbarPostCastStop(self, event, unit, spellname, spellrank, castid)
+end
+local function CastbarPostChannelStart(self, event, unit, name, rank, text)
+	self.bars.Castbar.isFishing = (name == "Fishing")
+	self:CustomPositions(event)
+end
+local function CastbarPostChannelUpdate(self, event, unit, name, rank, text)
+end
+local function CastbarPostChannelStop(self, event, unit, spellname, spellrank)
+	self.bars.Castbar.isFishing = (spellname == "Fishing")
+	self:CustomPositions(event)
+	self.bars.Castbar:SetStatusBarColor(unpack(self.bars.Castbar.defaultStatusBarColor))	
+end
+
+local function CastbarCustomDelayText(self, duration)
+	self.Time:SetFormattedText("%.1f", duration)
+end
+
+local channelTimeString
+local function CastbarCustomTimeText(self, duration)
+		if self.casting then
+			self.Time:SetFormattedText("%.1f", self.max - duration)
+		elseif self.channeling then
+			self:FishingFlasher(duration)
+			self.Time:SetFormattedText("%.1f", duration)
+		end
+end
+
 --[[----------------------------------------
 	AURA UPDATE HOOKS
 ----------------------------------------]]--
-local function customFilter(icons, unit, icon, name)
-	local db = addon.db.profile.frames[unit]
-	local unitname = UnitName(unit)
-	
-	if(db.WhiteListAuras and db.AuraWhiteList[unitname]~=nil)then
-		if(db.AuraWhiteList[unitname][name]) then return true end
-	elseif(db.BlackListAuras and db.AuraBlackList[unitname]~=nil)then
-		if(db.AuraWhiteList[unitname][name]) then return false end
-	else
-		return true
-	end
-	
+local whitelist = {
+	 ["Renew"] = true,
+	 ["Power Word: Fortitude"] = true,
+	 ["Prayer of Fortitude"] = true, 
+	 ["Shadow Protection"] = true,
+	 ["Prayer of Shadow Protection"] = true,
+	 ["Divine Spirit"] = true,
+	 ["Prayer of Spirit"] = true,
+	 ["Heroic Presence"] = true,
+	 ["Weakened Soul"] = true,
+}
+
+local function customFilter(icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
+--	print(icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
+	icon.duration, icon.timeLeft,icon.owner = duration,timeLeft,caster
+	return name
 end
 
 local function SetAuraPosition(self, icons, count)
@@ -274,8 +315,6 @@ local function PreUpdateAura(event, unit)
 end
 
 local function PostUpdateAuraIcon(self,icons, unit, icon, index, offset, filter, isDebuff)
---	print(self.unit,icons, unit, icon, index, offset, filter, isDebuff)
---	if(index > icons.num)then icons[index]:Hide() end
 end
 
 local function sizeAuraIcon(icon,size)
@@ -287,7 +326,10 @@ local function updateAuraIcon(self,event)
 	local db = addon.db.profile
 	local auraGroup = self:GetParent()
 	local name,size,outline = (addon.LSM:Fetch('font',db.auras.font.name) or self.db.profile.fonts.default), db.auras.font.size, db.auras.font.outline
+	local frameUnit = self.parent:GetParent().unit
 	self.count:SetFont(name,size,outline)
+	self.ownership:Hide() 
+	
 	if(self.duration~=nil and self.timeLeft~=nil) then 
 		if(db.auras.timers.enabled)then
 			self.remaining:Show()
@@ -307,12 +349,18 @@ local function updateAuraIcon(self,event)
 			self.overlay:Hide()
 		end
 	end
-	if self.owner == 'player' then sizeAuraIcon(self,auraGroup.size*auraGroup.playerSize) end
-	local frameUnit = self.parent:GetParent().unit
+
+	if self.owner ~= 'player' then 
+		self.icon:SetDesaturated(true)
+	end -- sizeAuraIcon(self,auraGroup.size*auraGroup.playerSize) end
 	if frameUnit and self.owner then
 		local frameOwner, buffOwner = UnitGUID(frameUnit),UnitGUID(self.owner)
-		if frameUnit ~='player' and buffOwner == frameOwner then self.ownership:Show() else self.ownership:Hide() end
+		if frameUnit ~='player' and buffOwner == frameOwner then
+			self.ownership:Show() 
+			self.overlay:Hide()
+		end
 	end
+
 end
 
 local function PostCreateAuraIcon(self, button, icons, index, debuff)
@@ -320,14 +368,14 @@ local function PostCreateAuraIcon(self, button, icons, index, debuff)
 	local fontPath = addon.LSM:Fetch('font',db.auras.font.name) or self.db.profile.fonts.default
 
 	button.cd:SetReverse()
-	button.overlay:SetTexture(self.textures.border)
+	button.overlay:SetTexture(self.textures.auraBorder)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
 	button.overlay.Hide = function(self) self:SetVertexColor(0.25, 0.25, 0.25) end
 
 	local ownership = button:CreateTexture(nil, "OVERLAY")
-			ownership:SetTexture(self.textures.border)
-			ownership:SetPoint("TOPLEFT", button,"TOPLEFT", -2,2)
-			ownership:SetPoint("BOTTOMRIGHT", button,"BOTTOMRIGHT",2,-2)
+			ownership:SetTexture(self.textures.auraOwnerBorder)
+			ownership:SetPoint("TOPLEFT", button,"TOPLEFT", -1,1)
+			ownership:SetPoint("BOTTOMRIGHT", button,"BOTTOMRIGHT",1,-1)
 			ownership:SetTexCoord(0, 1, 0, 1)
 			ownership:Hide()
 	button.ownership = ownership
@@ -344,6 +392,20 @@ local function PostCreateAuraIcon(self, button, icons, index, debuff)
 		end)
 	end
 
+	button:SetScript('OnEnter', function(this)
+		if(not this.owner)then return end
+		local name,_ = UnitName(this.owner)
+		GameTooltip:SetOwner(button, "ANCHOR_RIGHT");
+		GameTooltip:SetUnitAura(self.unit,index)
+		GameTooltip:AddLine("Aura Owner : "..name, 1, 1, 1);
+		GameTooltip:Show();
+
+	end)
+	
+	button:SetScript('OnLeave', function(this)
+		GameTooltip:Hide()
+	end)
+	
 	local remaining = button.cd:CreateFontString(nil, "OVERLAY")
 		remaining:SetFont(fontPath, db.auras.font.size, db.auras.font.outline)
 		remaining:SetPoint("CENTER", button, 4, 4)
@@ -388,6 +450,7 @@ function makeComboPoints(self,anchorFrom,anchorTo,aX,aY)
 			  cpoints:SetTextColor(1,1,1)
 			  cpoints:SetJustifyH("CENTER")
 	self.CPoints = cpoints
+	
 	self.FontObjects["ComboPoints"] =  { 
 			name = "Combo Points",
 			object = self.CPoints
@@ -408,15 +471,41 @@ function makeCombatFeedbackText(self)
 		object =  self.CombatFeedbackText
 	}
 end
+local function CastbarFishingFlasher(self,duration)
+	if(self.isFishing)then
+		if (duration <= 18 and duration > 16) or (duration <= 14 and duration > 12) or (duration <= 8 and duration > 6) or (duration <= 4 and duration > 2)then
+			self:SetStatusBarColor(0,1,0)	
+		else
+			self:SetStatusBarColor(unpack(self.defaultStatusBarColor))	
+		end
+	else
+		self:SetStatusBarColor(unpack(self.defaultStatusBarColor))	
+	end
+end
 
+local function CustomPositions(self,event)
+	local bar = self.bars.Castbar
+	if(event == "UNIT_SPELLCAST_CHANNEL_START")then
+		if(bar.isFishing)then
+			bar:ClearAllPoints()
+			bar:SetPoint("CENTER",UIParent,"CENTER",0,0)
+		end
+	end
+	
+	if(event == "UNIT_SPELLCAST_CHANNEL_STOP")then
+		bar:ClearAllPoints()
+		bar:SetPoint(self.db.bars.Castbar.anchorFromPoint,self,self.db.bars.Castbar.anchorToPoint,self.db.bars.Castbar.anchorX,self.db.bars.Castbar.anchorY)
+	end
+end
 
-function makeCastBar(self)
+local function makeCastBar(self)
 	local db = addon.db.profile
 	local bar = CreateFrame("StatusBar", nil, self)
 	bar:SetBackdrop(self.db.bars.Castbar.Backdrop)
 	bar:SetBackdropColor(unpack(self.db.bars.Castbar.BackdropColor))
 	bar:SetStatusBarTexture(self.textures.statusbar)
-	bar:SetStatusBarColor(unpack(self.db.bars.Castbar.StatusBarColor))	
+	bar.defaultStatusBarColor = self.db.bars.Castbar.StatusBarColor
+	bar:SetStatusBarColor(unpack(bar.defaultStatusBarColor))	
 	bar.reverse = self.db.bars.Castbar.reverse
 	
 	bar.bg = bar:CreateTexture(nil, "BORDER")
@@ -441,14 +530,7 @@ function makeCastBar(self)
 		name = "Cast Time",
 		object = bar.Time
 	}
-
-	bar.CustomTimeText = function(self, duration)
-		if self.casting then
-			self.Time:SetFormattedText("%.1f", self.max - duration)
-		elseif self.channeling then
-			self.Time:SetFormattedText("%.1f", duration)
-		end
-	end	
+	bar.isFishing = false
 
 	if self.unit == "player" and self.db.bars.Castbar.SafeZone.enabled == true then 
 		bar.SafeZone = bar:CreateTexture(nil,"OVERLAY")
@@ -465,9 +547,15 @@ function makeCastBar(self)
 	bar:SetHeight(self.db.bars.Castbar.height)
 	bar:SetWidth(self.db.bars.Castbar.width)
 
+	self.CustomPositions = CustomPositions
+	bar.FishingFlasher = CastbarFishingFlasher
+	bar.CustomDelayText = CastbarCustomDelayText
+	bar.CustomTimeText = CastbarCustomTimeText
+
 	self.bars.Castbar = bar;	
 	self.Castbar = bar;
 end
+
 
 function RunePostUpdate(self,settings)
 	local runeBar = self:GetParent();
@@ -685,6 +773,8 @@ local layout = function(self, unit)
 		background = db.textures.backgrounds[self.db.textures.background],
 		statusbar = addon.LSM:Fetch('statusbar',self.db.textures.statusbar),
 		border = db.textures.borders[self.db.textures.border],
+		auraBorder = db.textures.borders[self.db.textures.border],
+		auraOwnerBorder = db.textures.borders["slimbuff"],
 	}
 	self:SetBackdrop(self.textures.background)
 	self:SetBackdropColor(unpack(db.colors.backdropColors))	
@@ -848,6 +938,7 @@ local layout = function(self, unit)
 --===========--
 	if unit == "target" then
 		addon:makeAuraFrame(self,{"Debuffs","Buffs"})
+		makeComboPoints(self,"RIGHT","LEFT",-9, 3,38,"RIGHT")
 	end
 
 --===========--
@@ -886,13 +977,13 @@ local layout = function(self, unit)
 --	 AGRRO INDICATOR   --
 --===================--
 	if IsAddOnLoaded("oUF_Banzai") then
-		self.Banzai = updateBanzai
-		self.BanzaiIndicator = power:CreateTexture(nil, "OVERLAY")
-		self.BanzaiIndicator:SetPoint("TOP", self, "TOP",0,-4)
-		self.BanzaiIndicator:SetHeight(3)
-		self.BanzaiIndicator:SetWidth(48)
-		self.BanzaiIndicator:SetTexture(1, .25, .25)
-		self.BanzaiIndicator:Hide()
+	  self.Banzai = updateBanzai
+	  self.BanzaiIndicator = self.Health:CreateTexture(nil, "OVERLAY")
+	  self.BanzaiIndicator:SetPoint("TOPRIGHT", self, 0, 0)
+	  self.BanzaiIndicator:SetHeight(4)
+	  self.BanzaiIndicator:SetWidth(4)
+	  self.BanzaiIndicator:SetTexture(1, .25, .25)
+	  self.BanzaiIndicator:Hide()
 	end
 --==============--
 --	 SMOOTH BARS   --
@@ -921,7 +1012,18 @@ local layout = function(self, unit)
 	self.PostUpdateAuraIcon = PostUpdateAuraIcon
 	self.PostUpdateHealth = PostUpdateHealth
 	self.PostUpdatePower = PostUpdatePower
-	self.CustomAuraFilter = CustomFilter
+	self.CustomAuraFilter = customFilter
+	
+	self.PostCastStart = CastbarPostCastStart
+	self.PostCastFailed = CastbarPostCastFailed
+	self.PostCastInterrupted = CastbarPostCastInterrupted
+	self.PostCastDelayed = CastbarPostCastDelayed
+	self.PostCastStop = CastbarPostCastStop
+
+	self.PostChannelStart = CastbarPostChannelStart
+	self.PostChannelUpdate = CastbarPostChannelUpdate
+	self.PostChannelStop = CastbarPostChannelStop
+
 	self:SetAttribute("initial-scale", db.frames.scale)
 	return self
 end
@@ -954,9 +1056,6 @@ function addon:UpdateFontObjects(obj,size,name,outline)
 	local db = self.db.profile
 	
 	if obj~=nil and obj.FontObjects then	
-
-		print(tostring(db.frames.font.size),tostring(db.frames.font.name),tostring(db.frames.font.outline))
-
 		for index,font in pairs(obj.FontObjects)do
 			if(font.object:GetObjectType() == "FontString")then
 				font.object:SetFont(addon.LSM:Fetch(addon.LSM.MediaType.FONT, db.frames.font.name),db.frames.font.size,db.frames.font.outline) 
@@ -1015,6 +1114,7 @@ end
 
 function addon:OnEnable()
 	
+	--CreateFrame("GameTooltip","oUFSmee2AuraToolTip",UIParent,"GameTooltipTemplate") 
     -- Called when the addon is enabled
 	local db = self.db.profile
 	if not db.enabled then
@@ -1022,6 +1122,7 @@ function addon:OnEnable()
 		self:Disable()
 		return
 	end
+
 	self.AuraWhiteList={}
 	self.AuraBlackList={}
 	

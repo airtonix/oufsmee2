@@ -1,20 +1,20 @@
 local layoutName = 'oUF_Smee2'
-local mod = _G[layoutName]
-local configModName = layoutName..'_Config'
-_G[configModName] = LibStub("AceAddon-3.0"):NewAddon(configModName, "AceConsole-3.0")
-local configMod = _G[configModName]
-configMod.mod = mod
+local addon = _G[layoutName]
+local configAddonName = layoutName..'_Config'
+_G[configAddonName] = LibStub("AceAddon-3.0"):NewAddon(configAddonName, "AceConsole-3.0")
+local configAddon = _G[configAddonName]
+configAddon.addon = addon
 
 
 
 --======================--
 --==<<	ACE3 SETUP	>>==--
 --======================--
-function configMod:round(num, idp)
+function configAddon:round(num, idp)
   if idp and idp>0 then  return math.floor(num * mult + 0.5) / (10^idp)  end
   return math.floor(num + 0.5)
 end
-function configMod:numberize(val)
+function configAddon:numberize(val)
 	if(val >= 1e3) then
 		return ("%.1fk"):format(val / 1e3)
 	elseif (val >= 1e6) then 
@@ -24,25 +24,25 @@ function configMod:numberize(val)
 	end
 end
 
-function configMod:Debug(msg)
-	if not mod.db.profile.enabledDebugMessages then return end
+function configAddon:Debug(msg)
+	if not addon.db.profile.enabledDebugMessages then return end
 	self:Print("|cFFFFFF00Debug : |r"..tostring(msg))
 end
 
-function configMod:OnInitialize()
+function configAddon:OnInitialize()
 end
 
-function configMod:OnEnable()
+function configAddon:OnEnable()
 	self:Debug("Enabling")
-	self:SetupUnitOptions(mod.units)
+	self:SetupUnitOptions(addon.units)
 	self:SetupTagOptions(oUF.TagsLogicStrings)
-	LibStub("AceConfig-3.0"):RegisterOptionsTable(configModName, self.options,layoutName)
+	LibStub("AceConfig-3.0"):RegisterOptionsTable(configAddonName, self.options,layoutName)
 	-- RegisterOptions("Profiles", LibStub('AceDBOptions-3.0'):GetOptionsTable(addon.db))
-	self.optionsFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(configModName, layoutName)
+	self.optionsFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(configAddonName, layoutName)
 	self:Debug("Enabled")
 end
 
-function configMod:OnDisable()
+function configAddon:OnDisable()
  	self:Debug("Disabling")
    -- Called when the addon is disabled
 	db = self.db.profile

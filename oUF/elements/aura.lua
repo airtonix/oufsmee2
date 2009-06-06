@@ -121,6 +121,7 @@ local updateIcon = function(self, unit, icons, index, offset, filter, isDebuff, 
 	if(not icon) then
 		icon = (self.CreateAuraIcon or createAuraIcon) (self, icons, index, isDebuff)
 	end
+	
 	local name, rank, texture, count, dtype, duration, timeLeft, caster = UnitAura(unit, index, filter)
 	local show = (self.CustomAuraFilter or customFilter) (icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
 

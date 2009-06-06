@@ -390,8 +390,8 @@ function configAddon:GetUnitFrameOption(info)
 	if(#info >= 4)then output = profile end
 	if(#info >= 5)then output = output[info[4]] end	
 	if(#info >= 6)then output = output[info[5]] end
-	if(#info == 7)then output = output[info[6]] end
-	if(#info == 8)then output = output[info[7]] end
+	if(#info >= 7)then output = output[info[6]] end
+	if(#info >= 8)then output = output[info[7]] end
 	
 	output = output[setting]
 	

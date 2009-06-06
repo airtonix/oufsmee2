@@ -506,7 +506,7 @@ oUF_Smee_Settings = {
 					textures = {
 						background = 'default',
 						statusbar = 'gloss',
-						border = 'default',
+						border = 'slimbuff',
 					},
 				},
 				target = {
