@@ -175,7 +175,57 @@ local function PostUpdatePower(self, event, unit, bar, min, max)
 	end
 end
 
+local CastNotificationSent = false
+local CastNotificationMsg = ""
+local CastNotificationChannel = "SAY"
 -- CASTBAR
+local groupType = function(u)
+	if(GetNumRaidMembers()>0)then
+		return "RAID"
+	elseif(GetNumPartyMembers()>0)then
+		return "PARTY"
+	end
+end
+
+local function whisperTarget(u)
+	return UnitName(u)
+end
+
+local castAnnouncements = {
+	["Resurrection"] = {
+		msg = "<< Ressurecting %s >>",
+		channel = groupType,
+		target = nil,
+	},
+	["Redemption"] = {
+		msg = "<< Ressurecting %s >>",
+		channel = groupType,
+		target = nil,
+	},
+	["Revive"] = {
+		msg = "<< Ressurecting %s >>",
+		channel = groupType,
+		target = nil,
+	},
+	["Rebirth"] = {
+		msg = "<< Ressurecting %s >>",
+		channel = groupType,
+		target = nil,
+	},
+	["Pain Suppression"] = {
+		msg = "<< Pain Suppresion on %s >>",
+		channel = groupType,
+		target = nil,
+	},
+	["Power Infusion"] = {
+		msg = "<< Power Infusion on You >>",
+		channel = function() return "WHISPER" end,
+		target = UnitName,
+	},
+
+}
+
+local msg
 local function CastbarPostCastStart(self, event, unit, name, rank, text, castid)
 end
 local function CastbarPostCastFailed(self, event, unit, spellname, spellrank, castid)
@@ -201,6 +251,29 @@ end
 local function CastbarCustomDelayText(self, duration)
 	self.Time:SetFormattedText("%.1f", duration)
 end
+local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spelltarget)
+	self.Castbar.target = spelltarget
+
+	if(unit == "player")then
+		msg = castAnnouncements[spell]
+		if msg then 
+
+			SendChatMessage(
+				msg.target and msg.msg or msg.msg:format(UnitName(spelltarget)), 
+				msg.channel(),
+				"Common", 
+				msg.target and msg.target(spelltarget) or nil
+			);
+			
+		end
+	end	
+end
+local UNIT_SPELLCAST_SUCCEEDED = function (self,event, unit, spell, spellrank)
+	if(spell == "Ressurection" and unit == "player")then
+		CastNotificationSent = false;
+	end
+end
+
 
 local channelTimeString
 local function CastbarCustomTimeText(self, duration)
@@ -215,22 +288,10 @@ end
 --[[----------------------------------------
 	AURA UPDATE HOOKS
 ----------------------------------------]]--
-local whitelist = {
-	 ["Renew"] = true,
-	 ["Power Word: Fortitude"] = true,
-	 ["Prayer of Fortitude"] = true, 
-	 ["Shadow Protection"] = true,
-	 ["Prayer of Shadow Protection"] = true,
-	 ["Divine Spirit"] = true,
-	 ["Prayer of Spirit"] = true,
-	 ["Heroic Presence"] = true,
-	 ["Weakened Soul"] = true,
-}
-
 local function customFilter(icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
 --	print(icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
 	icon.duration, icon.timeLeft,icon.owner = duration,timeLeft,caster
-	return name
+	return (icons.whitelist~=nil) and icons.whitelist[name]	or name
 end
 
 local function SetAuraPosition(self, icons, count)
@@ -363,6 +424,21 @@ local function updateAuraIcon(self,event)
 
 end
 
+local function ShowAuraTooltip(self,motion)
+	GameTooltip:SetOwner(self, "ANCHOR_TOP");
+	if(self.debuff)then
+		GameTooltip:SetUnitDebuff(self.frame.unit,self.index,nil)
+	else
+		GameTooltip:SetUnitBuff(self.frame.unit,self.index,nil)
+	end
+	GameTooltip:AddLine("Aura Owner : "..(self.owner and UnitName(self.owner) or "Unknown Unit"), 1, 1, 1);
+	GameTooltip:Show();
+end
+
+local function HideAuraTooltip(self,motion)
+	GameTooltip:Hide()
+end
+
 local function PostCreateAuraIcon(self, button, icons, index, debuff)
 	local db = addon.db.profile
 	local fontPath = addon.LSM:Fetch('font',db.auras.font.name) or self.db.profile.fonts.default
@@ -379,32 +455,16 @@ local function PostCreateAuraIcon(self, button, icons, index, debuff)
 			ownership:SetTexCoord(0, 1, 0, 1)
 			ownership:Hide()
 	button.ownership = ownership
-	
+
+	button.index = index
 	button.count:SetParent(button.cd)
 	button.count:SetFont(fontPath, db.frames.font.size, db.frames.font.outline)
 	button.count:SetPoint("CENTER",button,"BOTTOM",0,-2)
 	
-	if (not debuff and self.unit =="player") then
-		button:SetScript('OnMouseUp', function(self, mouseButton)
-			if mouseButton == 'RightButton' then
-				CancelUnitBuff('player', index)
-			end
-		end)
-	end
 
-	button:SetScript('OnEnter', function(this)
-		if(not this.owner)then return end
-		local name,_ = UnitName(this.owner)
-		GameTooltip:SetOwner(button, "ANCHOR_RIGHT");
-		GameTooltip:SetUnitAura(self.unit,index)
-		GameTooltip:AddLine("Aura Owner : "..name, 1, 1, 1);
-		GameTooltip:Show();
 
-	end)
-	
-	button:SetScript('OnLeave', function(this)
-		GameTooltip:Hide()
-	end)
+	button:SetScript('OnEnter', ShowAuraTooltip)
+	button:SetScript('OnLeave', HideAuraTooltip)
 	
 	local remaining = button.cd:CreateFontString(nil, "OVERLAY")
 		remaining:SetFont(fontPath, db.auras.font.size, db.auras.font.outline)
@@ -435,6 +495,9 @@ function addon:makeAuraFrame(obj,auraTypes)
 			auraFrame.filter = db.filter
 			auraFrame.onlyShowPlayer = db.onlyShowPlayer or nil
 			auraFrame.setup = db.setup
+			auraFrame.whitelist = db.whitelist
+			auraFrame.blacklist = db.blacklist
+			auraFrame.showType = true
 		obj[auraType] = auraFrame;
 	end
 end
@@ -554,6 +617,12 @@ local function makeCastBar(self)
 
 	self.bars.Castbar = bar;	
 	self.Castbar = bar;
+	
+	if(self.unit == "player")then
+		self:RegisterEvent("UNIT_SPELLCAST_SENT", UNIT_SPELLCAST_SENT)
+		self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", UNIT_SPELLCAST_SUCCEEDED)
+	end
+	
 end
 
 
@@ -768,7 +837,8 @@ local layout = function(self, unit)
 
 	self.BarFade =  self.db.barFading
 	self.disallowVehicleSwap =  self.db.disallowVehicleSwap	
-
+	self.ignoreHealComm = true
+	
 	self.textures = {
 		background = db.textures.backgrounds[self.db.textures.background],
 		statusbar = addon.LSM:Fetch('statusbar',self.db.textures.statusbar),
@@ -1114,7 +1184,6 @@ end
 
 function addon:OnEnable()
 	
-	--CreateFrame("GameTooltip","oUFSmee2AuraToolTip",UIParent,"GameTooltipTemplate") 
     -- Called when the addon is enabled
 	local db = self.db.profile
 	if not db.enabled then

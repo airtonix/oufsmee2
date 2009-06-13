@@ -65,7 +65,7 @@ local UNIT_SPELLCAST_START = function(self, event, unit, spell, spellrank)
 	castbar:Show()
 end
 
-local UNIT_SPELLCAST_SENT = function (event, unit, spell, spellrank)
+local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank)
 	sendTime = GetTime()
 end
 

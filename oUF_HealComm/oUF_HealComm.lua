@@ -62,6 +62,9 @@ local color = {
     a = .25,
 }
 
+local function renderHealLines(healerName,...)
+	print(healerName, ...)
+end
 
 --update a specific bar
 local updateHealCommBar = function(frame, unit)
@@ -112,12 +115,17 @@ local updateHealCommBar = function(frame, unit)
 	end
 
 end
+--[[
+
+local function drawHealLine(from,to)
+	print(from.unit,to.unit)
+end
 
 --used by library callbacks, arguments should be list of units to update
-local updateHealCommBars = function(...)
+local updateHealCommBars = function(healerName, ...)
 	for i = 1, select("#", ...) do
 		local unit = select(i, ...)
-
+		
         --search current oUF frames for this unit
         for frame in pairs(oUF.units) do
             local name, server = UnitName(frame)
@@ -128,6 +136,35 @@ local updateHealCommBars = function(...)
         end
 	end
 end
+--]]
+
+local function getFrame(playerName)
+	local output = nil
+    for frame,object in pairs(oUF.units) do
+        local name, server = UnitName(frame)
+        if server then name = strjoin("-",name,server) end
+        if playerName == name and not object.ignoreHealComm then
+        	output = object;
+        	break;
+        end
+    end
+    return output
+end
+
+--used by library callbacks, arguments should be list of units to update
+local updateHealCommBars = function(healerName, ...)
+	local name, unit
+	local healerFrame = getFrame(healerName)
+	for i = 1, select("#", ...) do
+		unit = select(i, ...)
+		target = getFrame(unit)
+		if(target)then
+--            print(target.unit,healerFrame.unit)
+            updateHealCommBar(target,unit)
+        end
+	end
+end
+
 
 local function hook(frame)
 	if frame.ignoreHealComm then return end
@@ -197,22 +234,22 @@ function oUF_HealComm:HealComm_DirectHealStart(event, healerName, healSize, endT
 		playerTarget = ... 
 		playerHeals = healSize
 	end
-    updateHealCommBars(...)
+    updateHealCommBars(healerName,...)
 end
 
 function oUF_HealComm:HealComm_DirectHealUpdate(event, healerName, healSize, endTime, ...)
-    updateHealCommBars(...)
+    updateHealCommBars(healerName,...)
 end
 
 function oUF_HealComm:HealComm_DirectHealStop(event, healerName, healSize, succeeded, ...)
     if healerName == playerName then
         playerIsCasting = false
     end
-    updateHealCommBars(...)
+    updateHealCommBars(healerName,...)
 end
 
 function oUF_HealComm:HealComm_HealModifierUpdate(event, unit, targetName, healModifier)
-    updateHealCommBars(unit)
+    updateHealCommBars(nil,unit)
 end
 
 healcomm.RegisterCallback(oUF_HealComm, "HealComm_DirectHealStart")

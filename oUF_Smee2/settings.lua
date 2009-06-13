@@ -484,6 +484,8 @@ oUF_Smee_Settings = {
 						spacing = 2,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					Debuffs = {
 						setup = false,
@@ -502,6 +504,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					textures = {
 						background = 'default',
@@ -723,6 +727,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					Debuffs = {
 						setup = false,
@@ -741,6 +747,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					textures = {
 						background = 'default',
@@ -963,6 +971,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					Debuffs = {
 						setup = false,
@@ -981,6 +991,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					textures = {
 						background = 'default',
@@ -1203,6 +1215,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					Debuffs = {
 						setup = false,
@@ -1221,6 +1235,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					textures = {
 						background = 'default',
@@ -1443,6 +1459,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					Debuffs = {
 						setup = false,
@@ -1461,6 +1479,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					textures = {
 						background = 'default',
@@ -1683,6 +1703,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					Debuffs = {
 						setup = false,
@@ -1701,6 +1723,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					textures = {
 						background = 'default',
@@ -1923,6 +1947,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					Debuffs = {
 						setup = false,
@@ -1941,6 +1967,8 @@ oUF_Smee_Settings = {
 						spacing = 1,
 						filter = nil,
 						showOnlyPlayer = nil,
+						whitelist = nil,
+						blacklist = nil,
 					},
 					textures = {
 						background = 'default',
