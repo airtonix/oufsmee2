@@ -115,28 +115,11 @@ local updateHealCommBar = function(frame, unit)
 	end
 
 end
---[[
 
 local function drawHealLine(from,to)
+	-- re-sizes a texture to draw a line from the 'from' frame to the 'to' frame.
 	print(from.unit,to.unit)
 end
-
---used by library callbacks, arguments should be list of units to update
-local updateHealCommBars = function(healerName, ...)
-	for i = 1, select("#", ...) do
-		local unit = select(i, ...)
-		
-        --search current oUF frames for this unit
-        for frame in pairs(oUF.units) do
-            local name, server = UnitName(frame)
-            if server then name = strjoin("-",name,server) end
-            if name == unit and not oUF.units[frame].ignoreHealComm then
-                updateHealCommBar(oUF.units[frame],unit)
-            end
-        end
-	end
-end
---]]
 
 local function getFrame(playerName)
 	local output = nil
@@ -159,7 +142,7 @@ local updateHealCommBars = function(healerName, ...)
 		unit = select(i, ...)
 		target = getFrame(unit)
 		if(target)then
---            print(target.unit,healerFrame.unit)
+            drawHealLine(target.unit,healerFrame.unit)
             updateHealCommBar(target,unit)
         end
 	end
