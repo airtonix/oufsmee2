@@ -51,6 +51,7 @@ function LDB.OnTooltipShow(tt)
 end
 
 local function dummy(arg) end
+
 local function GetClassColor(unit)
 	local _,unitClass = UnitClass(unit)
 	return unpack(addon.db.profile.colors.class[unitClass])

@@ -11,6 +11,9 @@
 --   that frame
 --
 --=============================================================================
+local printf = function(msg,error)
+	print("|c"..(error and "FFFF6600" or "FF00FF00").."oUF_HealComm : |r"..msg or "")
+end
 
 if not oUF then return end
 
@@ -62,10 +65,6 @@ local color = {
     a = .25,
 }
 
-local function renderHealLines(healerName,...)
-	print(healerName, ...)
-end
-
 --update a specific bar
 local updateHealCommBar = function(frame, unit)
 	if not unit or unit == nil then return end
@@ -95,13 +94,11 @@ local updateHealCommBar = function(frame, unit)
         frame.HealCommBar:Show()
     end
 	
-    h = parentBar:GetHeight()
-    w = frame:GetWidth()-2
-    orient = parentBar:GetOrientation()
+    local h,w = parentBar:GetHeight(),frame:GetWidth()-2
     healCommBar:ClearAllPoints()
     healCommBar:SetFrameStrata("DIALOG")
     
-    if(orient=="VERTICAL")then
+    if(parentBar:GetOrientation() == "VERTICAL")then
 		healCommBar:SetHeight(percInc * h)
 		healCommBar:SetWidth(w)
 		healCommBar:SetPoint("BOTTOM", parentBar, "BOTTOM", 0, h * percHP)
@@ -116,9 +113,61 @@ local updateHealCommBar = function(frame, unit)
 
 end
 
-local function drawHealLine(from,to)
-	-- re-sizes a texture to draw a line from the 'from' frame to the 'to' frame.
-	print(from.unit,to.unit)
+
+function drawHealLine(state,startf, endf)
+	printf(state.." | Healer : "..startf.unit..", Target : "..endf.unit)
+
+	if(state == "start" or state == "update")then
+		local ses = startf.Health:GetScale()
+		local ees = endf.Health:GetScale()
+		
+		local sx = startf.Health:GetLeft() -- * ses
+		local sy = (startf.Health:GetBottom() + startf.Health:GetTop()) / 2 -- * ses
+		local ex = endf.Health:GetLeft() * ees
+		local ey = (endf.Health:GetBottom() + endf.Health:GetTop()) / 2 * ees
+		
+		local dx,dy = ex - sx, ey - sy
+		local cx,cy = (sx + ex) / 2, (sy + ey) / 2
+		if (dx < 0) then
+			dx,dy = -dx,-dy
+		end
+		local length = sqrt(dx^2 + dy^2)
+		
+		
+		if length <= 0 then return end
+
+		local s,c = -dy / length, dx / length
+		local sc = s * c
+		local Bwid, Bhgt, BLx, BLy, TLx, TLy, TRx, TRy, BRx, BRy;
+		
+		if (dy >= 0) then
+			Bwid = ((length * c) - (32 * s)) * (32/60)
+			Bhgt = ((32 * c) - (length * s)) * (32/60)
+			BLx, BLy, BRy = (32 / length) * sc, s^2, (length / 32) * sc
+			BRx, TLx, TLy, TRx = 1 - BLy, BLy, 1 - BRy, 1 - BLx
+			TRy = BRx
+		else
+			Bwid = ((length * c) + (32 * s)) * (32/60)
+			Bhgt = ((32 * c) + (length * s)) * (32/60)
+			BLx, BLy, BRx = s * s, -(length / 32) * sc, 1 + (32 / length) * sc
+			BRy, TLx, TLy, TRy = BLx, 1 - BRx, 1 - BLx, 1 - BLy
+			TRx = TLy
+		end
+		local r,g,b
+
+
+		printf(table.concat({TLx, TLy, BLx, BLy, TRx, TRy, BRx, BRy}, ", "))
+		local line = startf.line
+
+	--	line:SetVertexColor(color.r, color.g, color.b, 0.5)
+		line:SetVertexColor(1,1,1, 0.6)
+		line:SetTexCoord(TLx, TLy, BLx, BLy, TRx, TRy, BRx, BRy)
+		line:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", cx + Bwid, cy + Bhgt)
+		line:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", cx - Bwid, cy - Bhgt)
+		line:Show()
+	else
+		startf.line:Hide()
+	end
 end
 
 local function getFrame(playerName)
@@ -135,17 +184,19 @@ local function getFrame(playerName)
 end
 
 --used by library callbacks, arguments should be list of units to update
-local updateHealCommBars = function(healerName, ...)
+local updateHealCommBars = function(state,healerName, ...)
 	local name, unit
-	local healerFrame = getFrame(healerName)
+	local source = getFrame(healerName)
+
 	for i = 1, select("#", ...) do
 		unit = select(i, ...)
 		target = getFrame(unit)
 		if(target)then
-            drawHealLine(target.unit,healerFrame.unit)
+            drawHealLine(state,source,target)
             updateHealCommBar(target,unit)
         end
 	end
+	
 end
 
 
@@ -195,6 +246,9 @@ local function hook(frame)
 	
 	frame.HealCommBar = hcb
 
+	frame.line = frame.Health:CreateTexture(nil, "OVERLAY")
+	frame.line:SetTexture("Interface\\Addons\\oUF_HealComm\\media\\Line")
+
 	local o = frame.PostUpdateHealth
 	frame.PostUpdateHealth = function(...)
 		if o then o(...) end
@@ -217,22 +271,22 @@ function oUF_HealComm:HealComm_DirectHealStart(event, healerName, healSize, endT
 		playerTarget = ... 
 		playerHeals = healSize
 	end
-    updateHealCommBars(healerName,...)
+    updateHealCommBars("start",healerName,...)
 end
 
 function oUF_HealComm:HealComm_DirectHealUpdate(event, healerName, healSize, endTime, ...)
-    updateHealCommBars(healerName,...)
+    updateHealCommBars("update",healerName,...)
 end
 
 function oUF_HealComm:HealComm_DirectHealStop(event, healerName, healSize, succeeded, ...)
     if healerName == playerName then
         playerIsCasting = false
     end
-    updateHealCommBars(healerName,...)
+    updateHealCommBars("stop",healerName,...)
 end
 
 function oUF_HealComm:HealComm_HealModifierUpdate(event, unit, targetName, healModifier)
-    updateHealCommBars(nil,unit)
+    updateHealCommBars("update",nil,unit)
 end
 
 healcomm.RegisterCallback(oUF_HealComm, "HealComm_DirectHealStart")
