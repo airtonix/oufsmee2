@@ -2,6 +2,7 @@ local _G = getfenv(0)
 local _,playerClass = UnitClass("player")
 local tinsert = table.insert
 local layoutName = "oUF_Smee2"
+local configName = layoutName .. "_Config"
 _G[layoutName] = LibStub("AceAddon-3.0"):NewAddon(layoutName,"AceConsole-3.0")
 local addon = _G[layoutName];
 	addon.LSM = LibStub("LibSharedMedia-3.0")
@@ -24,19 +25,38 @@ function LDB.OnClick(self, button)
 		if addon.db.profile.enabled then
 			if IsAltKeyDown() then
 				if IsControlKeyDown() then
-					addon:ToggleDebug()
-				end
+					-- alt + ctrl
+				elseif IsShiftKeyDown() then
+					-- alt + shift
+				else
+					-- only alt
+				end				
 			elseif IsShiftKeyDown()  then
---				addon:DoSomething()
+				if IsControlKeyDown() then
+					-- shift + ctrl
+				else
+					-- only shift
+					addon:ToggleDebug()
+				end				
+			elseif IsControlKeyDown() then
+				--
 			else
 				addon:ToggleFrameLock(nil,not addon.db.profile.frames.locked)
 			end
 		else
 			--addon:ToggleActive(true)
 		end
-	else
+	elseif button == "LeftButton" then
 		addon:OpenConfig()
 	end
+end
+function LDB.OnTooltipShow(tt)
+	tt:AddLine(layoutName)
+	tt:AddLine("Debugging "..(addon.enabledDebugMessages and "en" or "dis").."abled.")
+	tt:AddLine("--")
+	tt:AddLine("Left Click : Open Config")
+	tt:AddLine("Right Click : Unlock Frames")
+	tt:AddLine("Shift + Right Click : Toggle Debug Messages")
 end
 
 function addon:ToggleFrameLock(obj,value)	
@@ -87,14 +107,6 @@ function addon:ToggleDebug()
 	self:Print("Debug messages : "..(self.enabledDebugMessages and "ON" or "OFF"))
 end
 
-function LDB.OnTooltipShow(tt)
-	tt:AddLine(layoutName)
-	tt:AddLine("Debugging "..(addon.enabledDebugMessages and "en" or "dis").."abled.")
-	tt:AddLine("--")
-	tt:AddLine("Ctrl + Alt + Left Click : Toggle Debug Messages")
-	tt:AddLine("Left Click : Open Config")
-	tt:AddLine("Right Click : Unlock Frames")
-end
 
 local function dummy(arg) end
 
@@ -329,7 +341,8 @@ local function CastbarCustomDelayText(self, duration)
 end
 local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spelltarget)
 	self.Castbar.target = spelltarget
-
+	if not self.db.bars.CastBar.announceSpells then return end
+	
 	if(unit == "player")then
 		msg = castAnnouncements[spell]
 		if msg then 
@@ -351,7 +364,9 @@ local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spellta
 		end
 	end	
 end
+
 local UNIT_SPELLCAST_SUCCEEDED = function (self,event, unit, spell, spellrank)
+	self.Print("CastSuccesful: "..spell.." Unit: "..unit.." UnitName: "..UnitName(unit))
 	if(unit == "player")then
 		CastNotificationSent = false;
 	end
@@ -1258,17 +1273,19 @@ function addon:ProcessChatCmd(cmd)
 	end
 end
 
-function addon:OpenConfig(input)
+function addon:OpenConfig()
 	local aceCfg = LibStub("AceConfigDialog-3.0")
-	if(not IsAddOnLoaded(layoutName..'_Config')) then
-		LoadAddOn(layoutName..'_Config')
-		InterfaceOptionsFrame:Hide()
-		aceCfg:SetDefaultSize(layoutName.."_Config", 700, 650)
-		aceCfg:Open(layoutName.."_Config")
-	else
-		aceCfg:Close(layoutName.."_Config")
+	if(not IsAddOnLoaded(configName)) then
+		LoadAddOn(configName)
 	end
 
+	if(aceCfg.OpenFrames[configName])then
+		aceCfg:Close(configName)
+	else
+		InterfaceOptionsFrame:Hide()
+		aceCfg:SetDefaultSize(configName, 700, 650)
+		aceCfg:Open(configName)
+	end
 end
 
 function addon:OnInitialize()

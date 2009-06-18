@@ -203,46 +203,6 @@ function configAddon:adjustAuraFrame(object,setting,value)
 	object:SetWidth(object.size * object.Colomns)
 end
 
-function configAddon:ToggleFrameLock(obj,value)	
-	if obj ~= nil then
-		if value == false then	
-			obj:SetBackdropColor(.2,1,.2,.5)
-			obj:EnableMouse(true);
-			obj:SetMovable(true);
-			obj:RegisterForDrag("LeftButton");
-			obj:SetUserPlaced(true)
-			obj:SetScript("OnDragStart", function()
-				if(db.frames.locked == false)then
-					this.isMoving = true;
-					this:StartMoving()
-				end
-			end);
-			obj:SetScript("OnDragStop", function() 
-				if(this.isMoving == true)then
-					this:StopMovingOrSizing()
-				end
-					local from, obj, to,x,y = this:GetPoint();
-					this.db.anchorFromPoint = from;
-					this.db.anchorTo = obj or 'UIParent';
-					this.db.anchorToPoint = to;
-					this.db.anchorX = x;
-					this.db.anchorY = y;
-			end);
-		else
-			obj:SetUserPlaced(false)
-			obj:SetMovable(false);
-			obj:RegisterForDrag("");
-			obj:SetBackdropColor(unpack(db.colors.backdropColors))
-		end
-	else
-		db.frames.locked = value
-		for index,frame in pairs(oUF.objects)do
-			if(frame.unit ~= nil) then
-				self:ToggleFrameLock(frame,value)
-			end
-		end
-	end	
-end
 function configAddon:Orientation(obj,value)
 		if(obj.SetChildOrientation) then 
 			obj:SetChildOrientation(value)
