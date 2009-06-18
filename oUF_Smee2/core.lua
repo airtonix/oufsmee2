@@ -162,17 +162,34 @@ local function UpdateThreat(self, event, unit)
 end
 
 local function PostUpdateHealth(self, event, unit, bar, min, max)
-  bar:SetStatusBarColor(0.25, 0.25, 0.25)      -- Default statusbar color  
-  if (UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
-    color = self.colors.tapped
-  else
-    bar:SetStatusBarColor(.25,.25,.35)      -- Default statusbar color
-  end
+	bar:SetStatusBarColor(0.25, 0.25, 0.25)      -- Default statusbar color  
+	if (UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
+		color = self.colors.tapped
+	else
+		bar:SetStatusBarColor(.25,.25,.35)      -- Default statusbar color
+	end
+
+	if self.db.bars.Health.reverse then 
+		bar:SetMinMaxValues(0, max)
+		bar:SetValue(max - min)
+	else
+		bar:SetMinMaxValues(0, max)
+		bar:SetValue(min)
+	end
+  
 end
 
 local function PostUpdatePower(self, event, unit, bar, min, max)
 	if (UnitIsGhost(unit) or UnitIsDead(unit) or not UnitIsConnected(unit)) then 
-		bar:SetValue(0)
+		min = 0
+	end
+
+	if self.db.bars.Power.reverse then 
+		bar:SetMinMaxValues(0, max)
+		bar:SetValue(max - min)
+	else
+		bar:SetMinMaxValues(0, max)
+		bar:SetValue(min)
 	end
 end
 
@@ -197,31 +214,43 @@ local castAnnouncements = {
 		msg = "<< Ressurecting %s >>",
 		channel = groupType,
 		target = nil,
+		nextTarget = false,
 	},
 	["Redemption"] = {
 		msg = "<< Ressurecting %s >>",
 		channel = groupType,
 		target = nil,
+		nextTarget = false,
 	},
 	["Revive"] = {
 		msg = "<< Ressurecting %s >>",
 		channel = groupType,
 		target = nil,
+		nextTarget = false,
 	},
 	["Rebirth"] = {
-		msg = "<< Ressurecting %s >>",
+		msg = "<< Combat Ressurection on %s >>",
 		channel = groupType,
 		target = nil,
+		nextTarget = false,
 	},
 	["Pain Suppression"] = {
 		msg = "<< Pain Suppresion on %s >>",
 		channel = groupType,
 		target = nil,
+		nextTarget = "<< %s ends in %s>>",
+	},
+	["Guardian Spirit"] = {
+		msg = "<< Guardian Spirit on %s >>",
+		channel = groupType,
+		target = nil,
+		nextTarget = "<< %s ends in %s>>",
 	},
 	["Power Infusion"] = {
 		msg = "<< Power Infusion on You >>",
 		channel = function() return "WHISPER" end,
 		target = UnitName,
+		nextTarget = false,
 	},
 
 }
@@ -265,12 +294,19 @@ local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spellta
 				"Common", 
 				msg.target and msg.target(spelltarget) or nil
 			);
-			
+			if(msg.nextTarget and addon.nextTargetUnit~=nil and UnitExists(addon.nextTargetUnit))then
+				SendChatMessage(
+					msg.nextTarget:format(spell,UnitName(addon.nextTargetUnit)),
+					msg.channel(),
+					"Common", 
+					msg.target and msg.target(spelltarget) or nil
+				);			
+			end
 		end
 	end	
 end
 local UNIT_SPELLCAST_SUCCEEDED = function (self,event, unit, spell, spellrank)
-	if(spell == "Ressurection" and unit == "player")then
+	if(unit == "player")then
 		CastNotificationSent = false;
 	end
 end
@@ -390,7 +426,7 @@ local function updateAuraIcon(self,event)
 	local name,size,outline = (addon.LSM:Fetch('font',db.auras.font.name) or self.db.profile.fonts.default), db.auras.font.size, db.auras.font.outline
 	local frameUnit = self.parent:GetParent().unit
 	self.count:SetFont(name,size,outline)
-	self.ownership:Hide() 
+--	self.ownership:Hide() 
 	
 	if(self.duration~=nil and self.timeLeft~=nil) then 
 		if(db.auras.timers.enabled)then
@@ -418,7 +454,7 @@ local function updateAuraIcon(self,event)
 	if frameUnit and self.owner then
 		local frameOwner, buffOwner = UnitGUID(frameUnit),UnitGUID(self.owner)
 		if frameUnit ~='player' and buffOwner == frameOwner then
-			self.ownership:Show() 
+--			self.ownership:Show() 
 			self.overlay:Hide()
 		end
 	end
@@ -449,6 +485,7 @@ local function PostCreateAuraIcon(self, button, icons, index, debuff)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
 	button.overlay.Hide = function(self) self:SetVertexColor(0.25, 0.25, 0.25) end
 
+--[[
 	local ownership = button:CreateTexture(nil, "OVERLAY")
 			ownership:SetTexture(self.textures.auraOwnerBorder)
 			ownership:SetPoint("TOPLEFT", button,"TOPLEFT", -1,1)
@@ -456,7 +493,7 @@ local function PostCreateAuraIcon(self, button, icons, index, debuff)
 			ownership:SetTexCoord(0, 1, 0, 1)
 			ownership:Hide()
 	button.ownership = ownership
-
+--]]
 	button.index = index
 	button.count:SetParent(button.cd)
 	button.count:SetFont(fontPath, db.frames.font.size, db.frames.font.outline)
@@ -1163,6 +1200,19 @@ function addon:ImportSharedMedia()
 	end
 end
 
+function addon:ProcessChatCmd(cmd)
+	if(cmd ~= "")then
+		local tokens = {}
+		for token in cmd:gmatch("%S+") do table.insert(tokens, token) end
+		if(tokens[1] == "msgtarget") then 
+			self.nextTargetUnit = UnitExists(tokens[2]) and tokens[2] or nil
+			self:Print("Cast Notification Rotation Target set to : "..tokens[2])
+		end
+	else
+		self:OpenConfig()
+	end
+end
+
 function addon:OpenConfig(input)
 	if(not IsAddOnLoaded(layoutName..'_Config')) then
 		LoadAddOn(layoutName..'_Config')
@@ -1180,7 +1230,7 @@ function addon:OnInitialize()
 	self.Layout = layout
 	self:HideBlizzard()
 	self:ImportSharedMedia()
-	self:RegisterChatCommand("oufsmee", "OpenConfig")
+	self:RegisterChatCommand("oufsmee", "ProcessChatCmd")
 end
 
 function addon:OnEnable()

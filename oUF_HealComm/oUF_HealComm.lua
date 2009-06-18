@@ -31,7 +31,7 @@ local layoutPath = "Interface\\Addons\\oUF_"..layoutName
 local mediaPath = layoutPath.."\\media\\"
 local font, fontSize = mediaPath.."font.ttf", 11		-- The font and fontSize
 
-function round(num, idp)
+local function round(num, idp)
   if idp and idp>0 then
     local mult = 10^idp
     return math.floor(num * mult + 0.5) / mult
@@ -113,17 +113,21 @@ local updateHealCommBar = function(frame, unit)
 
 end
 
+local getClassColour = function(unit)
+	local _,unitClass = UnitClass(unit)
+	return unpack(self.db.profile.colors.class[unitClass or "WARRIOR"])
+end
 
-function drawHealLine(state,startf, endf)
-	printf(state.." | Healer : "..startf.unit..", Target : "..endf.unit)
+local drawHealLine = function(state,startf, endf)
+	--printf(state.." | Healer : "..startf.unit..", Target : "..endf.unit)
 
 	if(state == "start" or state == "update")then
 		local ses = startf.Health:GetScale()
 		local ees = endf.Health:GetScale()
 		
-		local sx = startf.Health:GetLeft() -- * ses
+		local sx = startf.Health:GetLeft() + (startf.Health:GetWidth() / 2) -- * ses
 		local sy = (startf.Health:GetBottom() + startf.Health:GetTop()) / 2 -- * ses
-		local ex = endf.Health:GetLeft() * ees
+		local ex = endf.Health:GetLeft() * ees + (endf.Health:GetWidth() / 2)
 		local ey = (endf.Health:GetBottom() + endf.Health:GetTop()) / 2 * ees
 		
 		local dx,dy = ex - sx, ey - sy
@@ -156,11 +160,12 @@ function drawHealLine(state,startf, endf)
 		local r,g,b
 
 
-		printf(table.concat({TLx, TLy, BLx, BLy, TRx, TRy, BRx, BRy}, ", "))
+		--printf(table.concat({TLx, TLy, BLx, BLy, TRx, TRy, BRx, BRy}, ", "))
 		local line = startf.line
-
-	--	line:SetVertexColor(color.r, color.g, color.b, 0.5)
-		line:SetVertexColor(1,1,1, 0.6)
+		local _,unitClass = UnitClass(startf.unit)
+		local color = oUF.colors.class[unitClass]
+		line:SetVertexColor(color[1], color[2], color[3], 0.8)
+		--line:SetVertexColor(1,1,1, 0.6)
 		line:SetTexCoord(TLx, TLy, BLx, BLy, TRx, TRy, BRx, BRy)
 		line:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", cx + Bwid, cy + Bhgt)
 		line:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", cx - Bwid, cy - Bhgt)
@@ -248,7 +253,7 @@ local function hook(frame)
 
 	frame.line = frame.Health:CreateTexture(nil, "OVERLAY")
 	frame.line:SetTexture("Interface\\Addons\\oUF_HealComm\\media\\Line")
-
+	
 	local o = frame.PostUpdateHealth
 	frame.PostUpdateHealth = function(...)
 		if o then o(...) end

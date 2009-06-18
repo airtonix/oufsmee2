@@ -400,15 +400,15 @@ function configAddon:GetUnitFrameOption(info)
 end
 -- SET--
 function configAddon:SetUnitFrameOption(info,value)
-	local object = info['arg']
-	local profile = object.db
+	local frame = info['arg']
+	local profile = frame.db
 	local setting = info[#info]
-	local output 
+	local output,object
 	self:Debug("\nSetUnitFrameOption : "..self:concatLeaves(info))
 	local parent = info[#info-1]	
 
 	if(#info >= 4)then output = profile; end
-	if(#info >= 5)then output = output[info[4]];object = object[info[4]]; end	
+	if(#info >= 5)then output = output[info[4]];object = frame[info[4]]; end	
 	if(#info >= 6)then output = output[info[5]];object = object[info[5]]; end
 	if(#info >= 7)then output = output[info[6]];object = object[info[6]]; end
 	if(#info >= 8)then output = output[info[7]];object = object[info[7]]; end
@@ -419,7 +419,7 @@ function configAddon:SetUnitFrameOption(info,value)
 		self:SizeObject(object,output,parent)
 	elseif(setting == "scale" or setting == "anchorX" or setting == "anchorY" or setting == "anchorFromPoint" or setting == "anchorToPoint" )then
 		if setting == "scale" or parent == "Timer" then
-			info['arg']:UpdateTotemBar()
+			frame:UpdateTotemBar()
 		else
 			self:MoveObject(object,output)
 		end	
@@ -433,10 +433,16 @@ function configAddon:SetUnitFrameOption(info,value)
 		self:EnableObject(object,value)
 	elseif setting == "inRangeAlpha" or setting == "outsideRangeAlpha" then
 		object.setting = value
+	elseif setting == "reverse" then
+		if frame.bars then 
+			for index,bar in pairs(frame.bars)do
+				frame:UpdateElement(index)
+			end
+		end
 	elseif setting == "setup" then
 		self:ToggleAuraConfigMode(object,value)
 	elseif parent =="textures" then
-		self:UpdateTextures(info['arg'],output)
+		self:UpdateTextures(frame,output)
 	end
 	
 end
