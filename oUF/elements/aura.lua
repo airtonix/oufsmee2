@@ -59,9 +59,16 @@ local OnLeave = function()
 	GameTooltip:Hide()
 end
 
+-- We don't really need to validate much here as the filter should prevent us
+-- from doing something we shouldn't.
+local OnClick = function(self)
+	CancelUnitBuff(self.frame.unit, self:GetID(), self.filter)
+end
+
 local createAuraIcon = function(self, icons, index, debuff)
-	local button = CreateFrame("Frame", nil, icons)
+	local button = CreateFrame("Button", nil, icons)
 	button:EnableMouse(true)
+	button:RegisterForClicks'RightButtonUp'
 
 	button:SetWidth(icons.size or 16)
 	button:SetHeight(icons.size or 16)
@@ -84,6 +91,10 @@ local createAuraIcon = function(self, icons, index, debuff)
 
 	button:SetScript("OnEnter", OnEnter)
 	button:SetScript("OnLeave", OnLeave)
+
+	if(self.unit == 'player') then
+		button:SetScript('OnClick', OnClick)
+	end
 
 	table.insert(icons, button)
 
@@ -117,53 +128,55 @@ end
 local updateIcon = function(self, unit, icons, index, offset, filter, isDebuff, max)
 	if(index == 0) then index = max end
 
-	local icon = icons[index + offset]
-	if(not icon) then
-		icon = (self.CreateAuraIcon or createAuraIcon) (self, icons, index, isDebuff)
-	end
-	
 	local name, rank, texture, count, dtype, duration, timeLeft, caster = UnitAura(unit, index, filter)
-	local show = (self.CustomAuraFilter or customFilter) (icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
-
-	if icons.setup then 
-		name, rank, texture, count, dtype, duration, timeLeft, caster = "Mark of the Wild", "Rank 6", "Interface\\Icons\\Spell_Nature_Regeneration", 0, "Magic", 1800, 2877.147, "player", nil
-		show = true
-	end
-	
-	if(show) then
-		if(not icons.disableCooldown and duration and duration > 0) then
-			icon.cd:SetCooldown(timeLeft - duration, duration)
-			icon.duration = duration
-			icon.timeLeft = timeLeft
-			icon.cd:Show()
-		else
-			icon.cd:Hide()
+	if(name) then
+		local icon = icons[index + offset]
+		if(not icon) then
+			icon = (self.CreateAuraIcon or createAuraIcon) (self, icons, index, isDebuff)
 		end
 
-		if((isDebuff and icons.showDebuffType) or (not isDebuff and icons.showBuffType) or icons.showType) then
-			local color = DebuffTypeColor[dtype] or DebuffTypeColor.none
-			icon.overlay:SetVertexColor(color.r, color.g, color.b)
-			icon.overlay:Show()
+		local show = (self.CustomAuraFilter or customFilter) (icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
+		if(show) then
+			-- We might want to consider delaying the creation of an actual cooldown
+			-- object to this point, but I think that will just make things needlessly
+			-- complicated.
+			local cd = icon.cd
+			if(cd and not icons.disableCooldown) then
+				if(duration and duration > 0) then
+					cd:SetCooldown(timeLeft - duration, duration)
+					cd:Show()
+				else
+					cd:Hide()
+				end
+			end
+
+			if((isDebuff and icons.showDebuffType) or (not isDebuff and icons.showBuffType) or icons.showType) then
+				local color = DebuffTypeColor[dtype] or DebuffTypeColor.none
+
+				icon.overlay:SetVertexColor(color.r, color.g, color.b)
+				icon.overlay:Show()
+			else
+				icon.overlay:Hide()
+			end
+
+			icon.icon:SetTexture(texture)
+			icon.count:SetText((count > 1 and count))
+
+			icon.filter = filter
+			icon.debuff = isDebuff
+
+			icon:SetID(index)
+			icon:Show()
+
+			if(self.PostUpdateAuraIcon) then
+				self:PostUpdateAuraIcon(icons, unit, icon, index, offset, filter, isDebuff)
+			end
 		else
-			icon.overlay:Hide()
-		end
-
-		icon.icon:SetTexture(texture)
-		icon.count:SetText((count > 1 and count))
-
-		icon.filter = filter
-		icon.debuff = isDebuff
-
-		icon:SetID(index)
-		icon:Show()
-
-		if(self.PostUpdateAuraIcon) then
-			self:PostUpdateAuraIcon(icons, unit, icon, index, offset, filter, isDebuff)
+			-- Hide the icon in-case we are in the middle of the stack.
+			icon:Hide()
 		end
 
 		return true
-	else
-		icon:Hide()
 	end
 end
 
@@ -214,7 +227,7 @@ local Update = function(self, event, unit)
 		local buffs = auras.numBuffs or 32
 		local debuffs = auras.numDebuffs or 40
 		local max = debuffs + buffs
-		
+
 		local visibleBuffs, visibleDebuffs = 0, 0
 		for index = 1, max do
 			if(index > buffs) then
@@ -226,6 +239,12 @@ local Update = function(self, event, unit)
 					visibleBuffs = visibleBuffs + 1
 				end
 			end
+		end
+
+		local index = visibleBuffs + visibleDebuffs + 1
+		while(auras[index]) do
+			auras[index]:Hide()
+			index = index + 1
 		end
 
 		auras.visibleBuffs = visibleBuffs

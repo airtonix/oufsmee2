@@ -12,3 +12,4 @@ embeds.xml
 core.lua
 methods.lua
 config.lua
+spellIconTextures.lua

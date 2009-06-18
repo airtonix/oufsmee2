@@ -9,6 +9,9 @@ local addon = _G[layoutName];
 	addon.build = {}
 	addon.build.version, addon.build.build, addon.build.date, addon.build.tocversion = GetBuildInfo()
 
+local CastNotificationSent = false
+local CastNotificationMsg = ""
+local CastNotificationChannel = "SAY"
 
 ---------------
 --      LDB      --
@@ -251,9 +254,7 @@ local function PostUpdatePower(self, event, unit, bar, min, max)
 	end
 end
 
-local CastNotificationSent = false
-local CastNotificationMsg = ""
-local CastNotificationChannel = "SAY"
+
 -- CASTBAR
 local groupType = function(u)
 	if(GetNumRaidMembers()>0)then
@@ -341,7 +342,7 @@ local function CastbarCustomDelayText(self, duration)
 end
 local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spelltarget)
 	self.Castbar.target = spelltarget
-	if not self.db.bars.CastBar.announceSpells then return end
+	if not self.db.bars.Castbar.announceSpells then return end
 	
 	if(unit == "player")then
 		msg = castAnnouncements[spell]
@@ -366,7 +367,8 @@ local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spellta
 end
 
 local UNIT_SPELLCAST_SUCCEEDED = function (self,event, unit, spell, spellrank)
-	self.Print("CastSuccesful: "..spell.." Unit: "..unit.." UnitName: "..UnitName(unit))
+	if not self.db.bars.Castbar.announceSpells then return end
+	addon:Debug("CastSuccesful: "..spell.." Unit: "..unit.." UnitName: "..UnitName(unit))
 	if(unit == "player")then
 		CastNotificationSent = false;
 	end
@@ -386,13 +388,15 @@ end
 --[[----------------------------------------
 	AURA UPDATE HOOKS
 ----------------------------------------]]--
+
 local function customFilter(icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
 	icon.duration, icon.timeLeft,icon.owner = duration,timeLeft,caster
-	return (icons.whitelist~=nil) and icons.whitelist[name]	or name
+	return true --[[(icons.whitelist~=nil) and icons.whitelist[name]	or icons.setup or name]]--
 end
 
 local function SetAuraPosition(self, icons, count)
 	addon:Debug("Repositioning auras.")
+	local count = icons.setup and icons.num or count 
 	if(icons and count > 0) then
 		local col,row = 0,0
 		local spacing = icons.spacing or 0
@@ -405,9 +409,10 @@ local function SetAuraPosition(self, icons, count)
 		local IndexOfLlargestIconInThisRow = 1
 		local previousIconSize = 0
 		local nextRowYPoint = 0
-		
 		for i = 1, count do
 			local button = icons[i]
+
+			if icons.setup and button and not button:IsShown() then button:Show() end
 			if(button and button:IsShown()) then
 				if(icons.gap and button.debuff) then
 					if(col > 0) then col = col + 1 end
@@ -472,7 +477,11 @@ end
 local function PreUpdateAura(event, unit)
 end
 
+local function PostUpdateAura(self,event, unit)
+end
+
 local function PostUpdateAuraIcon(self,icons, unit, icon, index, offset, filter, isDebuff)
+
 end
 
 local function sizeAuraIcon(icon,size)
@@ -554,13 +563,12 @@ local function PostCreateAuraIcon(self, button, icons, index, debuff)
 			ownership:Hide()
 	button.ownership = ownership
 --]]
+
 	button.index = index
 	button.count:SetParent(button.cd)
 	button.count:SetFont(fontPath, db.frames.font.size, db.frames.font.outline)
 	button.count:SetPoint("CENTER",button,"BOTTOM",0,-2)
 	
-
-
 	button:SetScript('OnEnter', ShowAuraTooltip)
 	button:SetScript('OnLeave', HideAuraTooltip)
 	
@@ -596,6 +604,7 @@ function addon:makeAuraFrame(obj,auraTypes)
 			auraFrame.whitelist = db.whitelist
 			auraFrame.blacklist = db.blacklist
 			auraFrame.showType = true
+			auraFrame.parent = obj
 		obj[auraType] = auraFrame;
 	end
 end
@@ -1178,6 +1187,7 @@ local layout = function(self, unit)
 	self.SetAuraPosition = SetAuraPosition
 	self.PostCreateAuraIcon = PostCreateAuraIcon
 	self.PostUpdateAuraIcon = PostUpdateAuraIcon
+	self.PostUpdateAura = PostUpdateAura
 	self.PostUpdateHealth = PostUpdateHealth
 	self.PostUpdatePower = PostUpdatePower
 	self.CustomAuraFilter = customFilter

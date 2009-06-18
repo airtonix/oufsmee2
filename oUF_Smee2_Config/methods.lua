@@ -178,10 +178,91 @@ function configAddon:SetAuraFontOptions(obj,size,name,outline)
 --	 end
 end
 
-function configAddon:ToggleAuraConfigMode(object,value)
-	object.setup = value
-	object:GetParent():UpdateElement('Aura')
+-- We don't really need to validate much here as the filter should prevent us
+-- from doing something we shouldn't.
+local OnClick = function(self)
+	CancelUnitBuff(self.frame.unit, self:GetID(), self.filter)
 end
+
+local createAuraIcon = function(self, icons, index, debuff)
+	local button = CreateFrame("Button", nil, icons)
+	button:EnableMouse(true)
+	button:RegisterForClicks'RightButtonUp'
+
+	button:SetWidth(icons.size or 16)
+	button:SetHeight(icons.size or 16)
+
+	local cd = CreateFrame("Cooldown", nil, button)
+	cd:SetAllPoints(button)
+
+	local icon = button:CreateTexture(nil, "BACKGROUND")
+	icon:SetAllPoints(button)
+
+	local count = button:CreateFontString(nil, "OVERLAY")
+	count:SetFontObject(NumberFontNormal)
+	count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 0)
+
+	local overlay = button:CreateTexture(nil, "OVERLAY")
+	overlay:SetTexture"Interface\\Buttons\\UI-Debuff-Overlays"
+	overlay:SetAllPoints(button)
+	overlay:SetTexCoord(.296875, .5703125, 0, .515625)
+	button.overlay = overlay
+
+	button:SetScript("OnEnter", OnEnter)
+	button:SetScript("OnLeave", OnLeave)
+
+	if(self.unit == 'player') then
+		button:SetScript('OnClick', OnClick)
+	end
+
+	table.insert(icons, button)
+
+	button.parent = icons
+	button.frame = self
+	button.debuff = debuff
+
+	button.icon = icon
+	button.count = count
+	button.cd = cd
+
+	if(self.PostCreateAuraIcon) then self:PostCreateAuraIcon(button, icons, index, debuff) end
+
+	return button
+end
+function configAddon:ToggleAuraConfigMode(object,value)
+	local num = object.visibleAuras or object.visibleBuffs or object.visibleDebuffs or 0
+	local icon, name, rank, texture, count, dtype, duration, timeLeft
+	if value then
+		for i=1,40 do
+			duration = math.random(60,800)
+			timeLeft = math.random(1,duration)
+	
+			if(object[i]==nil)then
+				icon = createAuraIcon(object.parent, object, i, false)
+				icon:SetID(i)
+				object[i] = icon
+			end
+			object[i].duration = duration
+			object[i].timeleft = timeleft
+			object[i].cd:SetCooldown(timeLeft, duration)
+			--icon.filter = nil
+			object[i].debuff = false
+			object[i].icon:SetTexture("Interface\\Icons\\"..self.FakeIcons[math.random(1,#configAddon.FakeIcons-1)])
+			object[i].owner = math.random(1,2)==1 and "player" or "raid3"
+			object[i]:Show()				
+		end
+	else
+		for i=1,40 do
+			if i > num and object[i] then
+				object[i]:Hide()
+			end
+		end
+	end
+
+	object.setup = value
+	object:GetParent():UpdateElement('Aura')	
+end
+
 function configAddon:adjustAuraFrame(object,setting,value)
 	self:Debug("adjustAuraFrame("..tostring(object)..","..setting..","..value..")")
 	object[setting]=value
@@ -197,10 +278,10 @@ function configAddon:adjustAuraFrame(object,setting,value)
 --
 	end
 
-	object:GetParent():UpdateElement('Aura')
 	--background helper sizing.
 	object:SetHeight(object.size * self:GetAuraRows(object))
 	object:SetWidth(object.size * object.Colomns)
+	object:GetParent():UpdateElement('Aura')
 end
 
 function configAddon:Orientation(obj,value)

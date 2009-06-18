@@ -13,6 +13,8 @@ local global = GetAddOnMetadata(parent, 'X-oUF')
 assert(global, 'X-oUF needs to be defined in the parent add-on.')
 local oUF = _G[global]
 
+local classColors = oUF.colors.class
+
 local function Hex(r, g, b)
 	if type(r) == "table" then
 		if r.r then r, g, b = r.r, r.g, r.b else r, g, b = unpack(r) end
@@ -43,7 +45,7 @@ tags = {
 	["[plus]"]        = function(u) local c = UnitClassification(u); return (c == "elite" or c == "rareelite") and "+" end,
 	["[pvp]"]         = function(u) return UnitIsPVP(u) and "PvP" end,
 	["[race]"]        = function(u) return UnitRace(u) end,
-	["[raidcolor]"]   = function(u) local _, x = UnitClass(u); return x and Hex(RAID_CLASS_COLORS[x]) end,
+	["[raidcolor]"]   = function(u) local _, x = UnitClass(u); return x and Hex(classColors[x]) end,
 	["[rare]"]        = function(u) local c = UnitClassification(u); return (c == "rare" or c == "rareelite") and "Rare" end,
 	["[resting]"]     = function(u) return u == "player" and IsResting() and "zzz" end,
 	["[sex]"]         = function(u) local s = UnitSex(u) return s == 2 and "Male" or s == 3 and "Female" end,
@@ -77,6 +79,20 @@ tags = {
 		local c = UnitClassification(u)
 		return c == "rare" and "R" or c == "eliterare" and "R+" or c == "elite" and "+" or c == "worldboss" and "B"
 	end,
+
+	["group"] = function(unit)
+		local name, server = UnitName(unit)
+		if(server and server ~= "") then
+			name = string.format("%s-%s", name, server)
+		end
+
+		for i=1, GetNumRaidMembers() do
+			local raidName, _, group = GetRaidRosterInfo(i)
+			if( raidName == name ) then
+				return group
+			end
+		end
+	end,
 }
 local tagEvents = {
 	["[curhp]"]               = "UNIT_HEALTH",
@@ -103,12 +119,12 @@ local tagEvents = {
 	['[rare]']                = 'UNIT_CLASSIFICATION_CHANGED',
 	['[classification]']      = 'UNIT_CLASSIFICATION_CHANGED',
 	['[shortclassification]'] = 'UNIT_CLASSIFICATION_CHANGED',
+	["[group]"]                 = "RAID_ROSTER_UPDATE",
 }
 
 local unitlessEvents = {
-	PLAYER_TARGET_CHANGED = true,
-	PLAYER_FOCUS_CHANGED = true,
 	PLAYER_LEVEL_UP = true,
+	RAID_ROSTER_UPDATE = true,
 }
 
 local events = {}
@@ -124,21 +140,33 @@ frame:SetScript('OnEvent', function(self, event, unit)
 	end
 end)
 
+local OnUpdates = {}
 local eventlessUnits = {}
-local timer = .5
-local lowestTimer = .5
-local OnUpdate = function(self, elapsed)
-	if(timer >= lowestTimer) then
-		for k, fs in next, eventlessUnits do
-			if(fs.parent:IsShown() and UnitExists(fs.parent.unit)) then
-				fs:UpdateTag()
+
+local createOnUpdate = function(timer)
+	local OnUpdate = OnUpdates[timer]
+
+	if(not OnUpdate) then
+		local total = timer
+		local frame = CreateFrame'Frame'
+		local strings = eventlessUnits[timer]
+
+		frame:SetScript('OnUpdate', function(self, elapsed)
+			if(total >= timer) then
+				for k, fs in next, strings do
+					if(fs.parent:IsShown() and UnitExists(fs.parent.unit)) then
+						fs:UpdateTag()
+					end
+				end
+
+				total = 0
 			end
-		end
 
-		timer = 0
+			total = total + elapsed
+		end)
+
+		OnUpdates[timer] = OnUpdate
 	end
-
-	timer = timer + elapsed
 end
 
 local OnShow = function(self)
@@ -168,11 +196,14 @@ local RegisterEvents = function(fontstr, tagstr)
 end
 
 local UnregisterEvents = function(fontstr)
-	for events, data in pairs(events) do
+	for event, data in pairs(events) do
 		for k, tagfsstr in pairs(data) do
 			if(tagfsstr == fontstr) then
-				if(#data[k] == 1) then frame:UnregisterEvent(event) end
-				data[k] = nil
+				if(#data == 1) then
+					frame:UnregisterEvent(event)
+				end
+
+				table.remove(data, k)
 			end
 		end
 	end
@@ -279,25 +310,19 @@ local Tag = function(self, fs, tagstr)
 
 	local unit = self.unit
 	if((unit and unit:match'%w+target') or fs.frequentUpdates) then
+		local timer
 		if(type(fs.frequentUpdates) == 'number') then
-			lowestTimer = math.min(fs.frequentUpdates, lowestTimer)
+			timer = fs.frequentUpdates
+		else
+			timer = .5
 		end
 
-		table.insert(eventlessUnits, fs)
+		if(not eventlessUnits[timer]) then eventlessUnits[timer] = {} end
+		table.insert(eventlessUnits[timer], fs)
 
-		if(not frame:GetScript'OnUpdate') then
-			frame:SetScript('OnUpdate', OnUpdate)
-		end
+		createOnUpdate(timer)
 	else
 		RegisterEvents(fs, tagstr)
-
-		if(unit == 'focus') then
-			RegisterEvent(fs, 'PLAYER_FOCUS_CHANGED')
-		elseif(unit == 'target') then
-			RegisterEvent(fs, 'PLAYER_TARGET_CHANGED')
-		elseif(unit == 'mouseover') then
-			RegisterEvent(fs, 'UPDATE_MOUSEOVER_UNIT')
-		end
 	end
 
 	table.insert(self.__tags, fs)
@@ -307,9 +332,11 @@ local Untag = function(self, fs)
 	if(not fs or self == oUF) then return end
 
 	UnregisterEvents(fs)
-	for k, fontstr in next, eventlessUnits do
-		if(fs == fontstr) then
-			table.remove(eventlessUnits, k)
+	for _, timers in next, eventlessUnits do
+		for k, fontstr in next, timers do
+			if(fs == fontstr) then
+				table.remove(eventlessUnits, k)
+			end
 		end
 	end
 
