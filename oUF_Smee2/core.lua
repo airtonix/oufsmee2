@@ -21,8 +21,6 @@ local LDB = LibStub:GetLibrary("LibDataBroker-1.1"):NewDataObject(layoutName, {
 
 function LDB.OnClick(self, button)
 	if button == "RightButton" then
-		addon:OpenConfig()
-	else
 		if addon.db.profile.enabled then
 			if IsAltKeyDown() then
 				if IsControlKeyDown() then
@@ -30,13 +28,60 @@ function LDB.OnClick(self, button)
 				end
 			elseif IsShiftKeyDown()  then
 --				addon:DoSomething()
+			else
+				addon:ToggleFrameLock(nil,not addon.db.profile.frames.locked)
 			end
 		else
 			--addon:ToggleActive(true)
 		end
+	else
+		addon:OpenConfig()
 	end
 end
 
+function addon:ToggleFrameLock(obj,value)	
+	local db = self.db.profile
+	value = value or false
+	if obj ~= nil then
+		
+		if value == false then	
+			obj:SetBackdropColor(.2,1,.2,.5)
+			obj:EnableMouse(true);
+			obj:SetMovable(true);
+			obj:RegisterForDrag("LeftButton");
+			obj:SetUserPlaced(true)
+			obj:SetScript("OnDragStart", function()
+				if(self.db.frames.locked == false)then
+					this.isMoving = true;
+					this:StartMoving()
+				end
+			end);
+			obj:SetScript("OnDragStop", function() 
+				if(this.isMoving == true)then
+					this:StopMovingOrSizing()
+				end
+					local from, obj, to,x,y = this:GetPoint();
+					this.db.anchorFromPoint = from;
+					this.db.anchorTo = obj or 'UIParent';
+					this.db.anchorToPoint = to;
+					this.db.anchorX = x;
+					this.db.anchorY = y;
+			end);
+		else
+			obj:SetUserPlaced(false)
+			obj:SetMovable(false);
+			obj:RegisterForDrag("");
+			obj:SetBackdropColor(unpack(db.colors.backdropColors))
+		end
+	else
+		db.frames.locked = value
+		for index,frame in pairs(oUF.objects)do
+			if(frame.unit ~= nil) then
+				self:ToggleFrameLock(frame,value)
+			end
+		end
+	end	
+end
 function addon:ToggleDebug()
 	self.enabledDebugMessages=not self.enabledDebugMessages
 	self:Print("Debug messages : "..(self.enabledDebugMessages and "ON" or "OFF"))
@@ -47,7 +92,8 @@ function LDB.OnTooltipShow(tt)
 	tt:AddLine("Debugging "..(addon.enabledDebugMessages and "en" or "dis").."abled.")
 	tt:AddLine("--")
 	tt:AddLine("Ctrl + Alt + Left Click : Toggle Debug Messages")
-	tt:AddLine("Right Click : Open Config")
+	tt:AddLine("Left Click : Open Config")
+	tt:AddLine("Right Click : Unlock Frames")
 end
 
 local function dummy(arg) end
@@ -326,7 +372,6 @@ end
 	AURA UPDATE HOOKS
 ----------------------------------------]]--
 local function customFilter(icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
---	print(icons, unit, icon, name, rank, texture, count, dtype, duration, timeLeft, caster)
 	icon.duration, icon.timeLeft,icon.owner = duration,timeLeft,caster
 	return (icons.whitelist~=nil) and icons.whitelist[name]	or name
 end
@@ -1214,12 +1259,15 @@ function addon:ProcessChatCmd(cmd)
 end
 
 function addon:OpenConfig(input)
+	local aceCfg = LibStub("AceConfigDialog-3.0")
 	if(not IsAddOnLoaded(layoutName..'_Config')) then
 		LoadAddOn(layoutName..'_Config')
+		InterfaceOptionsFrame:Hide()
+		aceCfg:SetDefaultSize(layoutName.."_Config", 700, 650)
+		aceCfg:Open(layoutName.."_Config")
+	else
+		aceCfg:Close(layoutName.."_Config")
 	end
-	InterfaceOptionsFrame:Hide()
-	LibStub("AceConfigDialog-3.0"):SetDefaultSize(layoutName.."_Config", 700, 650)
-	LibStub("AceConfigDialog-3.0"):Open(layoutName.."_Config")
 
 end
 

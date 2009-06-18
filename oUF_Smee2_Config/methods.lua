@@ -363,7 +363,7 @@ function configAddon:setOptionValue(info,value)
 			end			
 		elseif(parentKey == "units")then
 			if(key == "lock") then
-				self:ToggleFrameLock(nil,value)
+				addon:ToggleFrameLock(nil,value)
 			elseif(key == "scale") then
 				self:ScaleObject(nil,value)
 			end
