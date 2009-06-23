@@ -1,4 +1,5 @@
 local _G = getfenv(0)
+local oUF = Smee2_oUFEmbed
 local _,playerClass = UnitClass("player")
 local tinsert = table.insert
 local layoutName = "oUF_Smee2"
@@ -9,10 +10,7 @@ local addon = _G[layoutName];
 	addon.build = {}
 	addon.build.version, addon.build.build, addon.build.date, addon.build.tocversion = GetBuildInfo()
 
-local CastNotificationSent = false
-local CastNotificationMsg = ""
-local CastNotificationChannel = "SAY"
-
+	
 ---------------
 --      LDB      --
 ---------------
@@ -74,7 +72,7 @@ function addon:ToggleFrameLock(obj,value)
 			obj:RegisterForDrag("LeftButton");
 			obj:SetUserPlaced(true)
 			obj:SetScript("OnDragStart", function()
-				if(self.db.frames.locked == false)then
+				if(db.frames.locked == false)then
 					this.isMoving = true;
 					this:StartMoving()
 				end
@@ -98,16 +96,25 @@ function addon:ToggleFrameLock(obj,value)
 		end
 	else
 		db.frames.locked = value
+		local unit,isRaid,isParty
 		for index,frame in pairs(oUF.objects)do
-			if(frame.unit ~= nil) then
-				self:ToggleFrameLock(frame,value)
+			unit = frame.unit
+
+			if(unit ~= nil)then
+				isRaid = unit:gmatch("raid")()        
+				isParty = unit:gmatch("party")()
+				if(isRaid==nil and isParty==nil)then
+					self:ToggleFrameLock(frame,value)
+				end
 			end
+
 		end
 	end	
 end
+
 function addon:ToggleDebug()
-	self.enabledDebugMessages=not self.enabledDebugMessages
-	self:Print("Debug messages : "..(self.enabledDebugMessages and "ON" or "OFF"))
+	self.db.profile.enabledDebugMessages=not self.db.profile.enabledDebugMessages
+	self:Print("Debug messages : "..(self.db.profile.enabledDebugMessages and "ON" or "OFF"))
 end
 
 
@@ -254,66 +261,6 @@ local function PostUpdatePower(self, event, unit, bar, min, max)
 	end
 end
 
-
--- CASTBAR
-local groupType = function(u)
-	if(GetNumRaidMembers()>0)then
-		return "RAID"
-	elseif(GetNumPartyMembers()>0)then
-		return "PARTY"
-	end
-end
-
-local function whisperTarget(u)
-	return UnitName(u)
-end
-
-local castAnnouncements = {
-	["Resurrection"] = {
-		msg = "<< Ressurecting %s >>",
-		channel = groupType,
-		target = nil,
-		nextTarget = false,
-	},
-	["Redemption"] = {
-		msg = "<< Ressurecting %s >>",
-		channel = groupType,
-		target = nil,
-		nextTarget = false,
-	},
-	["Revive"] = {
-		msg = "<< Ressurecting %s >>",
-		channel = groupType,
-		target = nil,
-		nextTarget = false,
-	},
-	["Rebirth"] = {
-		msg = "<< Combat Ressurection on %s >>",
-		channel = groupType,
-		target = nil,
-		nextTarget = false,
-	},
-	["Pain Suppression"] = {
-		msg = "<< Pain Suppresion on %s >>",
-		channel = groupType,
-		target = nil,
-		nextTarget = "<< %s ends in %s>>",
-	},
-	["Guardian Spirit"] = {
-		msg = "<< Guardian Spirit on %s >>",
-		channel = groupType,
-		target = nil,
-		nextTarget = "<< %s ends in %s>>",
-	},
-	["Power Infusion"] = {
-		msg = "<< Power Infusion on You >>",
-		channel = function() return "WHISPER" end,
-		target = UnitName,
-		nextTarget = false,
-	},
-
-}
-
 local msg
 local function CastbarPostCastStart(self, event, unit, name, rank, text, castid)
 end
@@ -341,41 +288,10 @@ local function CastbarCustomDelayText(self, duration)
 	self.Time:SetFormattedText("%.1f", duration)
 end
 local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spelltarget)
-	self.Castbar.target = spelltarget
-	if not self.db.bars.Castbar.announceSpells then return end
-	
-	if(unit == "player")then
-		msg = castAnnouncements[spell]
-		if msg then 
-
-			SendChatMessage(
-				msg.target and msg.msg or msg.msg:format(UnitName(spelltarget)), 
-				msg.channel(),
-				"Common", 
-				msg.target and msg.target(spelltarget) or nil
-			);
-			if(msg.nextTarget and addon.nextTargetUnit~=nil and UnitExists(addon.nextTargetUnit))then
-				SendChatMessage(
-					msg.nextTarget:format(spell,UnitName(addon.nextTargetUnit)),
-					msg.channel(),
-					"Common", 
-					msg.target and msg.target(spelltarget) or nil
-				);			
-			end
-		end
-	end	
 end
-
 local UNIT_SPELLCAST_SUCCEEDED = function (self,event, unit, spell, spellrank)
-	if not self.db.bars.Castbar.announceSpells then return end
-	addon:Debug("CastSuccesful: "..spell.." Unit: "..unit.." UnitName: "..UnitName(unit))
-	if(unit == "player")then
-		CastNotificationSent = false;
-	end
 end
 
-
-local channelTimeString
 local function CastbarCustomTimeText(self, duration)
 		if self.casting then
 			self.Time:SetFormattedText("%.1f", self.max - duration)
@@ -655,6 +571,7 @@ end
 
 local function CustomPositions(self,event)
 	local bar = self.bars.Castbar
+	local db = self.db.bars.Castbar
 	if(event == "UNIT_SPELLCAST_CHANNEL_START")then
 		if(bar.isFishing)then
 			bar:ClearAllPoints()
@@ -664,23 +581,25 @@ local function CustomPositions(self,event)
 	
 	if(event == "UNIT_SPELLCAST_CHANNEL_STOP")then
 		bar:ClearAllPoints()
-		bar:SetPoint(self.db.bars.Castbar.anchorFromPoint,self,self.db.bars.Castbar.anchorToPoint,self.db.bars.Castbar.anchorX,self.db.bars.Castbar.anchorY)
+		bar:SetPoint(anchorFromPoint,self,db.anchorToPoint,db.anchorX,db.anchorY)
+		bar:SetFrameStrata(db.frameStrata)
 	end
 end
 
 local function makeCastBar(self)
 	local db = addon.db.profile
+	local barDb = self.db.bars.Castbar
 	local bar = CreateFrame("StatusBar", nil, self)
-	bar:SetBackdrop(self.db.bars.Castbar.Backdrop)
-	bar:SetBackdropColor(unpack(self.db.bars.Castbar.BackdropColor))
+	bar:SetBackdrop(barDb.Backdrop)
+	bar:SetBackdropColor(unpack(barDb.BackdropColor))
 	bar:SetStatusBarTexture(self.textures.statusbar)
-	bar.defaultStatusBarColor = self.db.bars.Castbar.StatusBarColor
+	bar.defaultStatusBarColor = barDb.StatusBarColor
 	bar:SetStatusBarColor(unpack(bar.defaultStatusBarColor))	
-	bar.reverse = self.db.bars.Castbar.reverse
+	bar.reverse = barDb.reverse
 	
 	bar.bg = bar:CreateTexture(nil, "BORDER")
 	bar.bg:SetAllPoints(bar)
-	bar.bg:SetTexture(unpack(self.db.bars.Castbar.bgColor))
+	bar.bg:SetTexture(unpack(barDb.bgColor))
 	self.elements["Castbar"] = bar
 	bar.elements={
 		['parent'] = self,
@@ -688,34 +607,35 @@ local function makeCastBar(self)
 		['Castbar'] = bar,
 	}
 	
-	self.db.bars.Castbar.Text.anchorTo = "Castbar"
-	bar.Text = addon:makeFontObject(bar,"Cast Name",self.db.bars.Castbar.Text)
+	barDb.Text.anchorTo = "Castbar"
+	bar.Text = addon:makeFontObject(bar,"Cast Name",barDb.Text)
 	self.FontObjects['CastName']= { 
 		name = "Cast Name",
 		object = bar.Text
 	}
-	self.db.bars.Castbar.Time.anchorTo = "Castbar"
-	bar.Time = addon:makeFontObject(bar,"Cast Time",self.db.bars.Castbar.Time)
+	barDb.Time.anchorTo = "Castbar"
+	bar.Time = addon:makeFontObject(bar,"Cast Time",barDb.Time)
 	self.FontObjects["CastTime"] = { 
 		name = "Cast Time",
 		object = bar.Time
 	}
 	bar.isFishing = false
 
-	if self.unit == "player" and self.db.bars.Castbar.SafeZone.enabled == true then 
+	if self.unit == "player" and barDb.SafeZone.enabled == true then 
 		bar.SafeZone = bar:CreateTexture(nil,"OVERLAY")
 		bar.SafeZone:SetTexture(self.textures.statusbar)
-		bar.SafeZone:SetVertexColor(unpack(self.db.bars.Castbar.SafeZone.colour))
+		bar.SafeZone:SetVertexColor(unpack(barDb.SafeZone.colour))
 		bar.SafeZone:SetPoint("TOPRIGHT")
 		bar.SafeZone:SetPoint("BOTTOMRIGHT")	
 		bar.accurate=true
 	end
 		
 	bar:ClearAllPoints()
-	bar:SetPoint(self.db.bars.Castbar.anchorFromPoint,self,self.db.bars.Castbar.anchorToPoint,self.db.bars.Castbar.anchorX,self.db.bars.Castbar.anchorY)
-
-	bar:SetHeight(self.db.bars.Castbar.height)
-	bar:SetWidth(self.db.bars.Castbar.width)
+	bar:SetPoint(barDb.anchorFromPoint,self,barDb.anchorToPoint,barDb.anchorX,barDb.anchorY)
+	bar:SetFrameStrata(barDb.frameStrata)
+	
+	bar:SetHeight(barDb.height)
+	bar:SetWidth(barDb.width)
 
 	self.CustomPositions = CustomPositions
 	bar.FishingFlasher = CastbarFishingFlasher
@@ -1017,20 +937,7 @@ local layout = function(self, unit)
 	for index, data in pairs(self.db.FontObjects) do
 		self[index] = addon:makeFontObject(self,index,data)
 	end
-	
---[[
-	if IsAddOnLoaded("oUF_SmeeAFK") and (unit ~= "targettarget" or unit ~= "focustarget") then
-		self.AFK = {}
-		self.AFK.object = health.text
-		self.AFK.Tagger=self
-		self.AFK.fontFormat = "|cFFFF0000AFK |cFFFFFFFF%s:%s"	
 
-		self.DC = {}
-		self.DC.object = health.text
-		self.DC.Tagger=self
-		self.DC.fontFormat = "|cFFFF0000D/C |cFFFFFFFF%s:%s"	
-	end
---]]
 
 --==========--
 --	ICONS	--
@@ -1153,7 +1060,6 @@ local layout = function(self, unit)
 --===================--
 --	 AGRRO INDICATOR   --
 --===================--
-	if IsAddOnLoaded("oUF_Banzai") then
 	  self.Banzai = updateBanzai
 	  self.BanzaiIndicator = self.Health:CreateTexture(nil, "OVERLAY")
 	  self.BanzaiIndicator:SetPoint("TOPRIGHT", self, 0, 0)
@@ -1161,20 +1067,11 @@ local layout = function(self, unit)
 	  self.BanzaiIndicator:SetWidth(4)
 	  self.BanzaiIndicator:SetTexture(1, .25, .25)
 	  self.BanzaiIndicator:Hide()
-	end
---==============--
---	 SMOOTH BARS   --
---==============--
-	if IsAddOnLoaded("oUF_Smooth") then
-		health.Smooth = true
-		power.Smooth = true
-	end
+
 --=======================--
 --	 DEBUFF HIGHLIGHTING   --
 --=======================--
-	if IsAddOnLoaded("oUF_DebuffHighlight") then 
-		self.DebuffHighlightBackdrop = self.db.DebuffHighlightBackdrop
-	end
+	self.DebuffHighlightBackdrop = self.db.DebuffHighlightBackdrop
 	
 --=======================--
 -- 
@@ -1257,16 +1154,27 @@ end
 
 
 function addon:ImportSharedMedia()
-	for name,path in pairs(self.db.profile.textures.statusbars)do
-		self.LSM:Register(self.LSM.MediaType.STATUSBAR, name, path)
+	if(self.LSM) then self.SharedMediaActive = true else return end
+	local db = self.db.profile
+
+	if(db.textures)then
+		if(db.textures.borders)then
+			for name,path in pairs(self.db.profile.textures.statusbars)do
+				self.LSM:Register(self.LSM.MediaType.STATUSBAR, name, path)
+			end
+		end
+	
+		if(db.textures.borders)then
+			for name,path in pairs(self.db.profile.textures.borders)do
+				self.LSM:Register(self.LSM.MediaType.BORDER, name, path)
+			end
+		end
 	end
 	
-	for name,path in pairs(self.db.profile.textures.borders)do
-		self.LSM:Register(self.LSM.MediaType.BORDER, name, path)
-	end
-	
-	for name,data in pairs(self.db.profile.fonts)do
-		self.LSM:Register(self.LSM.MediaType.FONT, name, data.name)
+	if(db.fonts)then
+		for name,data in pairs(db.fonts)do
+			self.LSM:Register(self.LSM.MediaType.FONT, name, data.name)
+		end
 	end
 end
 
@@ -1287,6 +1195,7 @@ function addon:OpenConfig()
 	local aceCfg = LibStub("AceConfigDialog-3.0")
 	if(not IsAddOnLoaded(configName)) then
 		LoadAddOn(configName)
+		if(not IsAddOnLoaded(configName))then return end
 	end
 
 	if(aceCfg.OpenFrames[configName])then
@@ -1327,9 +1236,11 @@ function addon:OnEnable()
 	oUF:RegisterStyle("normal", self.Layout)
 	oUF:SetActiveStyle("normal")
 
+	local frame
 	for unit,data in pairs(db.frames.units)do
-		self.units[unit] = oUF:Spawn(unit)
-		self.units[unit]:SetPoint( data.anchorFromPoint, self.units[data.anchorTo] or UIParent, data.anchorToPoint, data.anchorX, data.anchorY)		
+		frame = oUF:Spawn(unit)
+		frame:SetPoint( data.anchorFromPoint, self.units[data.anchorTo] or UIParent, data.anchorToPoint, data.anchorX, data.anchorY)		
+		self.units[unit] = frame
 	end
 
 end

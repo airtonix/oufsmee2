@@ -278,42 +278,81 @@ function config:CreateBarOptions(groupName,frame)
 		type = 'group',
 		name = groupName,
 		order = 52,
+		get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
 		args = {
 			["enabled"] = {
 				type = "toggle",
 				name = "enable", desc = "Enable this bar.",
-				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
 				arg = frame,
 				order=1,
 			},
 			["reverse"] = {
 				type = "toggle",
-				name = "reverse", desc = "Reverse the direction in which this statusbar grows.",
-				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+				name = "Deficit Growth", desc = "Bar grows to show the deficit.",
 				arg = frame,
 				order=1,
 			},
 			["headerSize"] = {
 				type = "header",
 				name = "Size",
+				arg = frame,
 				order=10,
 			},
 			["height"] = {
 				type = "range",
 				name = "Height", desc = "Set the bar height.",
 				min = 1, max = 100, step = 1,
-				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
 				arg = frame,
 				order=11,
 			},
 			["bgColor"] = {
-					type = "color",
-					name = "bgColor Colour", desc = "choose the bgColor for the bar.",
-					get = 'GetColourOption', set = 'SetColourOption',
-					arg = frame,
-					hasAlpha = true,
-					order=32,
-			}
+				type = "color",
+				name = "bgColor Colour", desc = "choose the bgColor for the bar.",
+				hasAlpha = true,
+				arg = frame,
+				order=32,
+			},
+			["anchorX"] = {
+				type = "range",
+				name = "Horizontal Position", desc = "Set the Vertical position.",
+				min = -400, max = 400, step = 1,
+				arg = frame,
+				order=21,
+			},
+			["anchorY"] = {
+				type = "range",
+				name = "Vertical Position", desc = "Set the Horizontal position.",
+				min = -400, max = 400, step = 1,
+				arg = frame,
+				order=22,
+			},
+			["anchorToPoint"] = {
+				type = "select",
+				name = "To edge...",
+				desc = "Which edge on the "..frame.unit.." frame to attach To",
+				disabled ='CheckUnitFrameOption',
+				values=config.frameAnchorPoints,
+				arg = frame,
+				order=36,					
+			},
+			["anchorFromPoint"] = {
+				type = "select",
+				name = "From edge...", desc = "Which edge to attach from on the "..frame.unit.." frame.",
+				disabled ='CheckUnitFrameOption',
+				values = config.frameAnchorPoints,						
+				arg = frame,
+				order = 37,
+			},
+			["frameStrata"] = {
+				type = "select",
+				name = "Frame Strata...",
+				desc = "Which layer level this element exists on",
+				disabled ='CheckUnitFrameOption',
+				values=config.frameStrataOptions,
+				arg = frame,
+				order=38,					
+			},
+
 		}
 	}
 	
@@ -357,56 +396,94 @@ function config:CreateBarOptions(groupName,frame)
 				arg = frame,
 				order=22,
 			},
+			["anchorToPoint"] = {
+				type = "select",
+				name = "To edge...",
+				desc = "Which edge on the "..frame.unit.." frame to attach To",
+				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+				disabled ='CheckUnitFrameOption',
+				values=config.frameAnchorPoints,
+				arg = frame,
+				order=6,					
+			},
+			["anchorFromPoint"] = {
+				type = "select",
+				name = "From edge...", desc = "Which edge to attach from on the "..frame.unit.." frame.",
+				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+				disabled ='CheckUnitFrameOption',
+				values = config.frameAnchorPoints,						
+				arg = frame,
+				order = 7,
+			},
 		})
 	end
 	
 	if(groupName == 'Castbar') then
 		tableExtend(optionGroup.args,{
-		["headerColour"] = {
-				type = "header",
-				name = "Colours",
-				order=30,
-		},
-		["StatusBarColor"] = {
-				type = "color",
-				name = "StatusBarColor Colour", desc = "choose the StatusBarColor the casting bar.",
-				get = 'GetColourOption', set = 'SetColourOption',
-				arg = frame,
-				hasAlpha = true,
-				order=31,
-		},
-		["BackdropColor"] = {
-				type = "color",
-				name = "BackdropColor Colour", desc = "choose the BackdropColor for the casting bar.",
-				get = 'GetColourOption', set = 'SetColourOption',
-				arg = frame,
-				hasAlpha = true,
-				order=33,
-		},
-		['Text'] = {
-			type = "group",
-			name = "CastName",
-			order=40,
-			args={
-				["anchorX"] = {
-					type = "range",
-					name = "Horizontal Position", desc = "Set the Vertical position.",
-					min = -400, max = 400, step = 1,
-					get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+			["headerColour"] = {
+					type = "header",
+					name = "Colours",
+					order=30,
+			},
+			["StatusBarColor"] = {
+					type = "color",
+					name = "StatusBarColor Colour", desc = "choose the StatusBarColor the casting bar.",
+					get = 'GetColourOption', set = 'SetColourOption',
 					arg = frame,
-					order=21,
-				},
-				["anchorY"] = {
-					type = "range",
-					name = "Vertical Position", desc = "Set the Horizontal position.",
-					min = -400, max = 400, step = 1,
-					get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+					hasAlpha = true,
+					order=31,
+			},
+			["BackdropColor"] = {
+					type = "color",
+					name = "BackdropColor Colour", desc = "choose the BackdropColor for the casting bar.",
+					get = 'GetColourOption', set = 'SetColourOption',
 					arg = frame,
-					order=22,
-				},
-			}
-		},
-		['Time'] = {
+					hasAlpha = true,
+					order=33,
+			},
+			['Text'] = {
+				type = "group",
+				name = "CastName",
+				order=40,
+				args={
+					["anchorX"] = {
+						type = "range",
+						name = "Horizontal Position", desc = "Set the Vertical position.",
+						min = -400, max = 400, step = 1,
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						arg = frame,
+						order=21,
+					},
+					["anchorY"] = {
+						type = "range",
+						name = "Vertical Position", desc = "Set the Horizontal position.",
+						min = -400, max = 400, step = 1,
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						arg = frame,
+						order=22,
+					},
+					["anchorToPoint"] = {
+						type = "select",
+						name = "To edge...",
+						desc = "Which edge on the "..frame.unit.." frame to attach To",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckUnitFrameOption',
+						values=config.frameAnchorPoints,
+						arg = frame,
+						order=36,					
+					},
+					["anchorFromPoint"] = {
+						type = "select",
+						name = "From edge...", desc = "Which edge to attach from on the "..frame.unit.." frame.",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckUnitFrameOption',
+						values = config.frameAnchorPoints,						
+						arg = frame,
+						order = 37,
+					},
+				}
+			},
+			['Time'] = {
 				type = "group",
 				name = "CastTime",
 				order=50,
@@ -427,43 +504,63 @@ function config:CreateBarOptions(groupName,frame)
 						arg = frame,
 						order=22,
 					},
+					["anchorToPoint"] = {
+						type = "select",
+						name = "To edge...",
+						desc = "Which edge on the "..frame.unit.." frame to attach To",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckUnitFrameOption',
+						values=config.frameAnchorPoints,
+						arg = frame,
+						order=36,					
+					},
+					["anchorFromPoint"] = {
+						type = "select",
+						name = "From edge...", desc = "Which edge to attach from on the "..frame.unit.." frame.",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckUnitFrameOption',
+						values = config.frameAnchorPoints,						
+						arg = frame,
+						order = 37,
+					},
 				}
 			}
 		})
 
 		if frame.unit == 'player' then
 			tableExtend(optionGroup.args,{
-			["SafeZone"] = {
-				type = 'group',
-				name = 'Latency SafeZone',
-				order = 52,
-				args = {
-					["enabled"] = {
-						type = "toggle",
-						name = "enable", desc = "Enable latency safezone overlay.",
-						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
-						arg = frame,
-						order=1,
-					},
-					["accurate"] = {
-						type = "toggle",
-						name = "accurate latency", desc = "turn on accurate latency measurement.",
-						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
-						arg = frame,
-						order=1,
-					},
-					["colour"] = {
-							type = "color",
-							name = "Colour", desc = "choose the colour for the safezone.",
-							get = 'GetColourOption', set = 'SetColourOption',
+				["SafeZone"] = {
+					type = 'group',
+					name = 'Latency SafeZone',
+					order = 52,
+					args = {
+						["enabled"] = {
+							type = "toggle",
+							name = "enable", desc = "Enable latency safezone overlay.",
+							get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
 							arg = frame,
-							hasAlpha = true,
-							order=32,
-					}
-				}			
-			}
-		})
+							order=1,
+						},
+						["accurate"] = {
+							type = "toggle",
+							name = "accurate latency", desc = "turn on accurate latency measurement.",
+							get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+							arg = frame,
+							order=1,
+						},
+						["colour"] = {
+								type = "color",
+								name = "Colour", desc = "choose the colour for the safezone.",
+								get = 'GetColourOption', set = 'SetColourOption',
+								arg = frame,
+								hasAlpha = true,
+								order=32,
+						}
+					}			
+				}
+			})
 		end
+		
 	elseif groupName == "TotemBar"then
 		tableExtend(optionGroup.args,{
 			["scale"] = {

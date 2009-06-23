@@ -1,6 +1,4 @@
-local parent = debugstack():match[[\AddOns\(.-)\]]
-local global = GetAddOnMetadata(parent, 'X-oUF')
-local oUF = _G[global] or oUF
+local oUF = Smee2_oUFEmbed
 assert(oUF, 'oUF not loaded')
 
 oUF.TagEvents["[status]"] = "UNIT_HEALTH PLAYER_UPDATE_RESTING PLAYER_FLAGS_CHANGED"
@@ -59,8 +57,8 @@ end]],
 	["[resting]"]     		= [[function(u) return u == "player" and IsResting() and "zzz" end]],
 	["[afk]"]					= [[function(u) return UnitIsAFK(u) and "AFK" end]],
 	["[sex]"]         			= [[function(u) local s = UnitSex(u) return s == 2 and "Male" or s == 3 and "Female" end]],
-	["[smartclass]"]  	= [[function(u) return UnitIsPlayer(u) and oUF.Tags["[class]"](u) or oUF.Tags["[creature]"](u) end]],
-	["[status]"]      		= [[function(u) return UnitIsDead(u) and "Dead" or UnitIsGhost(u) and "Ghost" or not UnitIsConnected(u) and "Offline" or oUF.Tags["[resting]"](u) end]],
+	["[smartclass]"]  	= [[function(u) return UnitIsPlayer(u) and Smee2_oUFEmbed.Tags["[class]"](u) or Smee2_oUFEmbed.Tags["[creature]"](u) end]],
+	["[status]"]      		= [[function(u) return UnitIsDead(u) and "Dead" or UnitIsGhost(u) and "Ghost" or not UnitIsConnected(u) and "Offline" or Smee2_oUFEmbed.Tags["[resting]"](u) end]],
 	["[threat]"]      		= [[function(u) local s = UnitThreatSituation(u); return s == 1 and "++" or s == 2 and "--" or s == 3 and "Aggro" end]],
 	["[threatplus]"]		= [[function(u) 
 		local unitTarget = u.."target"
@@ -78,8 +76,8 @@ end]],
  if(c == "worldboss") then
   return "Boss"
  else
-  local plus = oUF.Tags["[plus]"](u)
-  local level = oUF.Tags["[level]"](u)
+  local plus = Smee2_oUFEmbed.Tags["[plus]"](u)
+  local level = Smee2_oUFEmbed.Tags["[level]"](u)
   if(plus) then
    return level .. plus
   else

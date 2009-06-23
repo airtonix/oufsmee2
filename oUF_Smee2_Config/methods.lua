@@ -4,6 +4,8 @@ local configAddonName = layoutName..'_Config'
 local configAddon = _G[configAddonName]
 local tinsert = table.insert
 local db = addon.db.profile
+local oUF = Smee2_oUFEmbed
+
 GlobalObject = {}
 
 configAddon.growthYDirections= {
@@ -18,6 +20,23 @@ configAddon.frameAnchorPoints = {
 	TOPLEFT = "TOPLEFT", TOP = "TOP", TOPRIGHT = "TOPRIGHT",
 	LEFT = "LEFT", CENTER = "CENTER", RIGHT = "RIGHT",
 	BOTTOMLEFT = "BOTTOMLEFT", BOTTOM = "BOTTOM", BOTTOMRIGHT = "BOTTOMRIGHT"
+}
+configAddon.frameLevelOptions = function()
+	local frameLevels = {}
+	for i=0,40 do
+		frameLevels[i] = tostring(i)
+	end
+	return frameLevels
+end
+configAddon.frameStrataOptions = {
+	TOOLTIP = "TOOLTIP",
+	FULLSCREEN_DIALOG = "FULLSCREEN_DIALOG",
+	FULLSCREEN ="FULLSCREEN",
+	DIALOG = "DIALOG",
+	HIGH = "HIGH",
+	MEDIUM = "MEDIUM",
+	LOW = "LOW",
+	BACKGROUND = "BACKGROUND",
 }
 configAddon.textHorizontalAlignmentPoints={
 	LEFT = "LEFT", CENTER = "CENTER", RIGHT ="RIGHT"
@@ -137,6 +156,8 @@ function configAddon:MoveObject(object,setting)
 		end 
 		object:ClearAllPoints()
 		object:SetPoint(setting.anchorFromPoint,anchorTo,setting.anchorToPoint,setting.anchorX,setting.anchorY)
+		object:SetFrameStrata(setting.frameStrata or "LOW")
+		object:SetFrameLevel(setting.frameLevel or object:GetFrameLevel() or 1)
 	end	
 end
 function configAddon:SizeObject(object,settings,parent)	
@@ -458,7 +479,7 @@ function configAddon:SetUnitFrameOption(info,value)
 
 	if(setting == "height" or setting == "width" )then
 		self:SizeObject(object,output,parent)
-	elseif(setting == "scale" or setting == "anchorX" or setting == "anchorY" or setting == "anchorFromPoint" or setting == "anchorToPoint" )then
+	elseif(setting == "scale" or setting == "anchorX" or setting == "anchorY" or setting == "anchorFromPoint" or setting == "anchorToPoint" or setting == "frameLevel" or setting == "frameStrata" )then
 		if setting == "scale" or parent == "Timer" then
 			frame:UpdateTotemBar()
 		else
