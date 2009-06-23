@@ -22,3 +22,4 @@ plugins\spark.lua
 plugins\aggro.lua
 plugins\debuff.lua
 plugins\range.lua
+plugins\combat.lua
