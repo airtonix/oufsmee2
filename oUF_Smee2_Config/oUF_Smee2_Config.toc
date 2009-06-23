@@ -13,10 +13,11 @@
 
 embeds.xml
 
-spellIconTextures.lua
+
 core.lua
 methods.lua
 config.lua
+spellIconTextures.lua
 
 indicators\tags.lua
 indicators\indicators.lua
