@@ -3,7 +3,7 @@
 ## Notes: layout for oUF.
 ## Author: z.jiricek
 ## X-eMail: zenobius.jiricek@gmail.com
-## Version: 30101.114
+## Version: 30101.12
 
 
 ## RequiredDeps:  oUF_Smee2

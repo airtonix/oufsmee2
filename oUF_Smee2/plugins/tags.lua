@@ -28,6 +28,7 @@ end]],
  end
 end]],
 	["[faction]"]     		= [[function(u) return UnitFactionGroup(u) end]],
+	["[factioncolour]"]	= [[function(u) return Hex(FACTION_BAR_COLORS[UnitReaction(u, "player")]) end]],
 	["[leader]"]      		= [[function(u) return UnitIsPartyLeader(u) and "(L)" end]],
 	["[leaderlong]"]  	= [[function(u) return UnitIsPartyLeader(u) and "(Leader)" end]],
 	["[level]"]       			= [[function(u) 

@@ -930,6 +930,7 @@ function config:AddUnitOptionSet(frame)
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
 						usage = "[tagname] [tagname]",
 						arg = frame,
+						width = "full",
 						order=32,
 					},
 				}
