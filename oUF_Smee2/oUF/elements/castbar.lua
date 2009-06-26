@@ -131,6 +131,7 @@ local UNIT_SPELLCAST_STOP = function(self, event, unit, spellname, spellrank, ca
 end
 
 local UNIT_SPELLCAST_CHANNEL_START = function(self, event, unit, spellname, spellrank)
+
 	if(self.unit ~= unit) then return end
 
 	local castbar = self.Castbar
@@ -170,7 +171,11 @@ local UNIT_SPELLCAST_CHANNEL_START = function(self, event, unit, spellname, spel
 end
 
 local UNIT_SPELLCAST_SENT = function(self, event, unit, spell, spellrank)
-	sendTime = GetTime()
+	if(not self.Castbar.casting or not self.Castbar.channeling)then
+		sendTime = GetTime()
+	else
+		sendTime = GetTime() + lagTime
+	end	
 end
 
 local UNIT_SPELLCAST_CHANNEL_UPDATE = function(self, event, unit, spellname, spellrank)
@@ -227,10 +232,12 @@ local onUpdate = function(self, elapsed)
 			local safeZonePercent
 			if self.SafeZone.accurate then
 				safeZonePercent = (lagTime / self.max)
+				self.SafeZone.ms = lagTime
 			else
 				local _, _, ms = GetNetStats()
 				-- MADNESS!
 				safeZonePercent = (width / self.max) * (ms / 1e5)
+				self.SafeZone.ms = ms
 			end
 			
 			if(safeZonePercent > 1) then safeZonePercent = 1 end
@@ -278,10 +285,12 @@ local onUpdate = function(self, elapsed)
 			local safeZonePercent
 			if self.SafeZone.accurate then
 				safeZonePercent = (lagTime / self.max)
+				self.SafeZone.ms = lagTime
 			else
 				local _, _, ms = GetNetStats()
 				-- MADNESS!
 				safeZonePercent = (width / self.max) * (ms / 1e5)
+				self.SafeZone.ms = ms
 			end
 
 			if(safeZonePercent > 1) then safeZonePercent = 1 end

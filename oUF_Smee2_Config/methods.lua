@@ -508,18 +508,20 @@ function configAddon:GetUnitFrameOption(info)
 end
 
 function configAddon:ToggleDebuffHighlighting(frame,setting,value)
-	if setting == "Backdrop" then
-		frame.DebuffHighlightBackdrop = value
-	elseif setting == "Icon" then
-		frame.DebuffHighlightUseTexture = value
+	local db = self.addon.db.profile.frames[frame]
+
+	unit.DebuffHighlightBackdrop = db.DebuffHighlight.Backdrop
+	unit.DebuffHighlightUseTexture = db.DebuffHighlight.Icon
+
+
+	if(db.DebuffHighlight.Icon == true or db.DebuffHighlight.Backdrop == true)then
+		unit:EnableElement("DebuffHighlight")
+	else
+		unit:DisableElement("DebuffHighlight")
 	end
 	
-	if(value == true)then
-		frame:EnableElement("DebuffHighlight")
-	else
-		frame:DisableElement("DebuffHighlight")
-	end
-	frame:UpdateElement("DebuffHighlight")
+	unit:UpdateElement("DebuffHighlight")
+
 end
 
 -- SET--
@@ -548,6 +550,11 @@ function configAddon:SetUnitFrameOption(info,value)
 			self:MoveObject(object,output)
 		end	
 	elseif info[#info-1]=="DebuffHighlight" then
+		if setting == "Backdrop" then
+			output.Icon = not value
+		elseif setting == "Icon" then
+			output.Backdrop = not value
+		end
 		self:ToggleDebuffHighlighting(frame,setting,value)
 	elseif(setting == "growth-x" or setting == "growth-y") or (setting=="Colomns" or setting =="Rows" or setting =="size" or setting =="playerSize" or setting=="spacing")then
 		self:adjustAuraFrame(object,setting,value)
