@@ -48,6 +48,7 @@ configAddon.fontOutlineTypes={
 	NONE = "None",
 	OUTLINE = "OUTLINE",
 	THICKOUTLINE = "THICKOUTLINE",
+	THINOUTLINE = "THINOUTLINE",
 	MONOCHROME = "MONOCHROME"
 }
 
@@ -88,6 +89,27 @@ configAddon.resizeRules = {
 	}
 }
 
+function configAddon:BarPowerColourRepresentTypes(groupName)
+	local types = {
+		colorTapping			= "... tapped by others",
+		colorDisconnected	= "... unit is offline",
+		colorHappiness		= "... happiness (pets)",
+		colorClass				= "... class colour (player)",
+		colorClassPet			= "... class colour (pets)",
+		colorClassNPC			= "... class colour (npc)",
+		colorReaction			= "... reaction of the unit",
+		colorSmooth			= "... bar percentage",
+	}
+
+	if(groupName == "Power")then
+		table.insert(types, { 	colorPower= "... the power type" })
+	elseif(groupName == "Health")then
+		table.insert(types, { colorHealth = "... health" })
+	end
+	
+	return types
+end
+
 function configAddon:UpdateTextures(object,data)
 	local textures = addon.db.profile.textures
 	
@@ -110,6 +132,13 @@ function configAddon:PlayerFramesToAnchorTo()
 	return AnchorToFrames
 end
 
+function configAddon:UnitFrameAnchorElements(frame)
+	local AnchorToFrames = {}
+	for frame, object in pairs(frame.elements)do
+		AnchorToFrames[frame] = frame
+	end
+	return AnchorToFrames
+end
 -------------------------------
 -- Debug Exploder
 -- : Explodes and joins the info table passed around in the ace3config gui
@@ -131,6 +160,10 @@ function configAddon:SetupUnitOptions(table)
 	end	
 end
 
+function configAddon:SetupProfileOptions(table)
+	self.options.args['profiles'].args = table
+end
+
 --	MANUPILATORS
 function configAddon:ScaleObject(obj,value)
 	if obj~=nil then
@@ -147,8 +180,11 @@ end
 function configAddon:MoveObject(object,setting)
 	if(object ~= nil) then
 		local anchorTo = setting.anchorTo 
+		local parentElements = object:GetParent().elements
 		if(anchorTo == nil or anchorTo == 'parent')then
 			anchorTo = object:GetParent()
+		elseif parentElements and parentElements[anchorTo] then
+			anchorTo = parentElements[anchorTo]
 		elseif(oUF.units[anchorTo])then
 			anchorTo = oUF.units[anchorTo]
 		else
@@ -156,10 +192,19 @@ function configAddon:MoveObject(object,setting)
 		end 
 		object:ClearAllPoints()
 		object:SetPoint(setting.anchorFromPoint,anchorTo,setting.anchorToPoint,setting.anchorX,setting.anchorY)
-		object:SetFrameStrata(setting.frameStrata or "LOW")
-		object:SetFrameLevel(setting.frameLevel or object:GetFrameLevel() or 1)
+		if(setting.frameStrata)then object:SetFrameStrata(setting.frameStrata or "LOW") end
+		if(setting.frameLevell)then object:SetFrameLevel(setting.frameLevel or object:GetFrameLevel() or 1) end
 	end	
 end
+
+function configAddon:UpdateBars(frame)
+	if frame.bars then 
+		for index,bar in pairs(frame.bars)do
+			frame:UpdateElement(index)
+		end
+	end
+end
+
 function configAddon:SizeObject(object,settings,parent)	
 	if(object ~= nil) then		
 		local widthRule = configAddon.resizeRules["Width"][parent] and configAddon.resizeRules["Width"][parent](object,settings.width) or settings.width
@@ -250,6 +295,7 @@ local createAuraIcon = function(self, icons, index, debuff)
 
 	return button
 end
+
 function configAddon:ToggleAuraConfigMode(object,value)
 	local num = object.visibleAuras or object.visibleBuffs or object.visibleDebuffs or 0
 	local icon, name, rank, texture, count, dtype, duration, timeLeft
@@ -460,15 +506,31 @@ function configAddon:GetUnitFrameOption(info)
 	self:Debug("\nGetUnitFrameOption : "..self:concatLeaves(info))
 	return output
 end
+
+function configAddon:ToggleDebuffHighlighting(frame,setting,value)
+	if setting == "Backdrop" then
+		frame.DebuffHighlightBackdrop = value
+	elseif setting == "Icon" then
+		frame.DebuffHighlightUseTexture = value
+	end
+	
+	if(value == true)then
+		frame:EnableElement("DebuffHighlight")
+	else
+		frame:DisableElement("DebuffHighlight")
+	end
+	frame:UpdateElement("DebuffHighlight")
+end
+
 -- SET--
 function configAddon:SetUnitFrameOption(info,value)
 	local frame = info['arg']
 	local profile = frame.db
 	local setting = info[#info]
-	local output,object
+	local output,object = nil,frame
 	self:Debug("\nSetUnitFrameOption : "..self:concatLeaves(info))
 	local parent = info[#info-1]	
-
+	
 	if(#info >= 4)then output = profile; end
 	if(#info >= 5)then output = output[info[4]];object = frame[info[4]]; end	
 	if(#info >= 6)then output = output[info[5]];object = object[info[5]]; end
@@ -482,9 +544,11 @@ function configAddon:SetUnitFrameOption(info,value)
 	elseif(setting == "scale" or setting == "anchorX" or setting == "anchorY" or setting == "anchorFromPoint" or setting == "anchorToPoint" or setting == "frameLevel" or setting == "frameStrata" )then
 		if setting == "scale" or parent == "Timer" then
 			frame:UpdateTotemBar()
-		else
+		else	
 			self:MoveObject(object,output)
 		end	
+	elseif info[#info-1]=="DebuffHighlight" then
+		self:ToggleDebuffHighlighting(frame,setting,value)
 	elseif(setting == "growth-x" or setting == "growth-y") or (setting=="Colomns" or setting =="Rows" or setting =="size" or setting =="playerSize" or setting=="spacing")then
 		self:adjustAuraFrame(object,setting,value)
 	elseif(setting == "orientation")then
@@ -496,11 +560,10 @@ function configAddon:SetUnitFrameOption(info,value)
 	elseif setting == "inRangeAlpha" or setting == "outsideRangeAlpha" then
 		object.setting = value
 	elseif setting == "reverse" then
-		if frame.bars then 
-			for index,bar in pairs(frame.bars)do
-				frame:UpdateElement(index)
-			end
-		end
+		self:UpdateBars(frame)
+	elseif setting == "accurate" then
+		frame.bars.Castbar.SafeZone.accurate = value
+		self:UpdateBars(frame)
 	elseif setting == "setup" then
 		self:ToggleAuraConfigMode(object,value)
 	elseif parent =="textures" then
@@ -545,7 +608,6 @@ function configAddon:GetColourOption(info)
 	if(#info >= 8)then output = output[info[7]] end
 
 	local r, g, b,a = unpack( output[setting] )
-	
 	self:Debug("\nGetColourOption  : "..self:concatLeaves(info) .. " : " ..tostring(r, g, b,a))
 	return r,g,b,a
 end
@@ -564,11 +626,8 @@ function configAddon:SetColourOption(info,r,g,b,a)
 	if(#info >= 8)then output = output[info[7]];object = object[info[7]]; end
 
 	output[setting]={r,g,b,a}
-
 	if setting == 'bgColor' then
 		object.bg:SetTexture(r,g,b,a)
-	elseif setting == 'BackdropColor' then
-		object:SetBackdropColor(r,g,b,a)
 	elseif setting == 'StatusBarColor' then
 		object:SetStatusBarColor(r,g,b,a)
 	elseif setting == 'colour' and parent=='SafeZone'  then
@@ -638,5 +697,10 @@ end
 -- VALIDATE--
 function configAddon:CheckUnitFrameOption(info)
 	return false
-end						
+end
+
+--==========================
+-- GET PROFILE UI
+
+
 

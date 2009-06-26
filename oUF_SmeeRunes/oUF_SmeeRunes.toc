@@ -1,8 +1,0 @@
-## Interface: 30100
-## Author: p3lim | modified by Smee
-## Version: 30100.2
-## Title: oUF_SmeeRunes
-## Notes: Death Knight rune support for oUF layouts.
-## RequiredDeps: oUF
-
-oUF_SmeeRunes.lua

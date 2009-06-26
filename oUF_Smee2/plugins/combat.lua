@@ -1,4 +1,7 @@
-if not oUF then return end
+local parent = debugstack():match[[\AddOns\(.-)\]]
+local global = GetAddOnMetadata(parent, 'X-oUF')
+assert(global, 'X-oUF needs to be defined in the parent add-on.')
+local oUF = _G[global]
 
 local damage_format = "-%d"
 local heal_format = "+%d"

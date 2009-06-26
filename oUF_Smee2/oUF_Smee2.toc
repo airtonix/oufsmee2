@@ -3,7 +3,7 @@
 ## Notes: layout for oUF.
 ## Author: z.jiricek
 ## X-eMail: zenobius.jiricek@gmail.com
-## Version: 30101.113
+## Version: 30101.114
 
 ## SavedVariables: oUF_Smee2DB
 ## OptionalDeps: Ace3, SharedMedia, oUF_PowerSpark, oUF_Banzai, oUF_Smooth, oUF_CombatFeedback, oUF_HealComm, oUF_DebuffHighlight, oUF_SpellRange, oUF_ReadyCheck, oUF_TagEditor
@@ -19,8 +19,11 @@ plugins\tags.lua
 settings.lua
 core.lua
 
-plugins\spark.lua
 plugins\aggro.lua
+plugins\assist.lua
+plugins\combat.lua
 plugins\debuff.lua
 plugins\range.lua
-plugins\combat.lua
+plugins\runes.lua
+plugins\spark.lua
+

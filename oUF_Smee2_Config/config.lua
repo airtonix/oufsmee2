@@ -1,17 +1,6 @@
-local tableExtend = function(array,table)
-	for index,data in pairs(table)do
-		array[index] = data
-	end
-end
-
 local config=oUF_Smee2_Config
+
 config.options = {
---[[
-    name = "oUF_Smee2", handler = config,
-    type = 'group', 
-    args = {
-		["frames"] = {
---]]
 			name = "Global", type = 'group',
 			childGroups = "select",
 			handler = config,
@@ -21,19 +10,17 @@ config.options = {
 					type = 'toggle',
 					get = "getOptionValue", set = "setOptionValue",
 				},
-				["tags"] = {
-					name = "Tags",	desc = "Text Status Tags ",
-					type = 'group',childGroups = "select",
-					args = { 
-						
-					},
-				},	
-				
 				["frames"] = {
 					name = "Frames",	desc = "Frame Options ",
-					type = 'group', 
+					type = 'group',
 					args = {
-
+						["colours"] = {
+							name = "Colours",	desc = "Global Colour Options",
+							type = 'group',childGroups = "select",
+							args = { 
+						
+							},
+						},	
 						["font"] = {
 							name = "Font", desc = "Global controls for fonts ",
 							type = 'group',
@@ -130,11 +117,14 @@ config.options = {
 
 					},
 				},	
-
-				
+				["tags"] = {
+					name = "Tags",	desc = "Text Status Tags ",
+					type = 'group',childGroups = "select",
+					args = { 
+						
+					},
+				},	
 			},
---		},
---    },
 }
 function config:CreateAuraOptions(groupName,frame)
 	local optionSet={
@@ -259,16 +249,29 @@ function config:CreateAuraOptions(groupName,frame)
 					arg = frame,
 					order = 20,
 				},
-				["playerSize"] = {
+				["isSaturated"] = {
+					type = 'toggle',
+					name = "Aura Owner Indication: Colour ", desc = "Aura ownership indicated by colour or lack thereof",
+					get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+					arg = frame,
+					order = 20,
+				},
+				["ownerScaled"] = {
+					type = 'toggle',
+					name = "Aura Owner Indication: Scale ", desc = "Aura ownership indicated by scale",
+					get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+					arg = frame,
+					order = 21,
+				},
+				["playerScale"] = {
 					type = "range",
 					name = "Your Icons Scale", desc = "Set the size of auras that belong to you, compared to the normal size. expressed as a fraction",
 					min = 0.1, max = 4.0, step = 0.1,
 					get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
 					disabled ='CheckUnitFrameOption',
 					arg = frame,
-					order = 20,
-				}
-			}
+					order = 22,
+				}			}
 		}
 		return optionSet
 end
@@ -290,7 +293,7 @@ function config:CreateBarOptions(groupName,frame)
 				type = "toggle",
 				name = "Deficit Growth", desc = "Bar grows to show the deficit.",
 				arg = frame,
-				order=1,
+				order=2,
 			},
 			["headerSize"] = {
 				type = "header",
@@ -305,59 +308,41 @@ function config:CreateBarOptions(groupName,frame)
 				arg = frame,
 				order=11,
 			},
+			["headerColours"] = {
+				type = "header",
+				name = "Colours",
+				arg = frame,
+				order=31,
+			},
 			["bgColor"] = {
 				type = "color",
 				name = "bgColor Colour", desc = "choose the bgColor for the bar.",
+				get = 'GetColourOption', set = 'SetColourOption',
 				hasAlpha = true,
 				arg = frame,
 				order=32,
 			},
-			["anchorX"] = {
-				type = "range",
-				name = "Horizontal Position", desc = "Set the Vertical position.",
-				min = -400, max = 400, step = 1,
+			["StatusBarColor"] = {
+				type = "color",
+				name = "StatusBarColor Colour", desc = "choose the bgColor for the bar.",
+				get = 'GetColourOption', set = 'SetColourOption',
+				hasAlpha = true,
 				arg = frame,
-				order=21,
+				order=33,
 			},
-			["anchorY"] = {
-				type = "range",
-				name = "Vertical Position", desc = "Set the Horizontal position.",
-				min = -400, max = 400, step = 1,
-				arg = frame,
-				order=22,
+			["BackdropColor"] = {
+					type = "color",
+					name = "BackdropColor Colour", desc = "choose the BackdropColor for the casting bar.",
+					get = 'GetColourOption', set = 'SetColourOption',
+					arg = frame,
+					hasAlpha = true,
+					order=33,
 			},
-			["anchorToPoint"] = {
-				type = "select",
-				name = "To edge...",
-				desc = "Which edge on the "..frame.unit.." frame to attach To",
-				disabled ='CheckUnitFrameOption',
-				values=config.frameAnchorPoints,
-				arg = frame,
-				order=36,					
-			},
-			["anchorFromPoint"] = {
-				type = "select",
-				name = "From edge...", desc = "Which edge to attach from on the "..frame.unit.." frame.",
-				disabled ='CheckUnitFrameOption',
-				values = config.frameAnchorPoints,						
-				arg = frame,
-				order = 37,
-			},
-			["frameStrata"] = {
-				type = "select",
-				name = "Frame Strata...",
-				desc = "Which layer level this element exists on",
-				disabled ='CheckUnitFrameOption',
-				values=config.frameStrataOptions,
-				arg = frame,
-				order=38,					
-			},
-
 		}
 	}
 	
 	if not (groupName=="Health" or groupName=="Power") then
-		tableExtend(optionGroup.args,{
+		config:TableExtend(optionGroup.args,{
 			["width"] = {
 				type = "range",
 				name = "Width", desc = "Set the bar width.",
@@ -377,6 +362,7 @@ function config:CreateBarOptions(groupName,frame)
 			["headerPosition"] = {
 				type = "header",
 				name = "Position",
+				arg = frame,
 				order=20,
 			},
 			["anchorX"] = {
@@ -404,7 +390,7 @@ function config:CreateBarOptions(groupName,frame)
 				disabled ='CheckUnitFrameOption',
 				values=config.frameAnchorPoints,
 				arg = frame,
-				order=6,					
+				order=23,					
 			},
 			["anchorFromPoint"] = {
 				type = "select",
@@ -413,34 +399,37 @@ function config:CreateBarOptions(groupName,frame)
 				disabled ='CheckUnitFrameOption',
 				values = config.frameAnchorPoints,						
 				arg = frame,
-				order = 7,
+				order = 24,
 			},
+			["frameStrata"] = {
+				type = "select",
+				name = "Frame Strata...",
+				desc = "Which layer level this element exists on",
+				disabled ='CheckUnitFrameOption',
+				values=config.frameStrataOptions,
+				arg = frame,
+				order=25,					
+			},
+
+		})
+	end
+	
+	if(groupName == 'Power' or groupName == 'Health') then
+		config:TableExtend(optionGroup.args,{
+			["barColourRepresents"] = {
+				type = "multiselect",
+				name = "Bar Colour Represents...",
+				desc = "What does the bar colour represent? That the unit is friendly, neutral or hostile? The type of class? If it's the powerbar should it represet the kind of power?'",
+				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+				values=function(groupName) return config.BarPowerColourRepresentTypes(groupName) end,
+				arg = frame,
+				order=3,					
+			}
 		})
 	end
 	
 	if(groupName == 'Castbar') then
-		tableExtend(optionGroup.args,{
-			["headerColour"] = {
-					type = "header",
-					name = "Colours",
-					order=30,
-			},
-			["StatusBarColor"] = {
-					type = "color",
-					name = "StatusBarColor Colour", desc = "choose the StatusBarColor the casting bar.",
-					get = 'GetColourOption', set = 'SetColourOption',
-					arg = frame,
-					hasAlpha = true,
-					order=31,
-			},
-			["BackdropColor"] = {
-					type = "color",
-					name = "BackdropColor Colour", desc = "choose the BackdropColor for the casting bar.",
-					get = 'GetColourOption', set = 'SetColourOption',
-					arg = frame,
-					hasAlpha = true,
-					order=33,
-			},
+		config:TableExtend(optionGroup.args,{
 			['Text'] = {
 				type = "group",
 				name = "CastName",
@@ -471,6 +460,16 @@ function config:CreateBarOptions(groupName,frame)
 						values=config.frameAnchorPoints,
 						arg = frame,
 						order=36,					
+					},
+					["anchorTo"] = {
+						type = "select",
+						name = "Anchor To Element...",
+						desc = "On which frame to anchor "..frame.unit.." to.",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckUnitFrameOption',
+						values = function() return config:UnitFrameAnchorElements(frame) end,
+						arg = frame,
+						order=37,					
 					},
 					["anchorFromPoint"] = {
 						type = "select",
@@ -514,6 +513,16 @@ function config:CreateBarOptions(groupName,frame)
 						arg = frame,
 						order=36,					
 					},
+					["anchorTo"] = {
+						type = "select",
+						name = "Anchor To Element...",
+						desc = "On which frame to anchor "..frame.unit.." to.",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckUnitFrameOption',
+						values = function() return config:UnitFrameAnchorElements(frame) end,
+						arg = frame,
+						order=37,					
+					},
 					["anchorFromPoint"] = {
 						type = "select",
 						name = "From edge...", desc = "Which edge to attach from on the "..frame.unit.." frame.",
@@ -528,7 +537,7 @@ function config:CreateBarOptions(groupName,frame)
 		})
 
 		if frame.unit == 'player' then
-			tableExtend(optionGroup.args,{
+			config:TableExtend(optionGroup.args,{
 				["SafeZone"] = {
 					type = 'group',
 					name = 'Latency SafeZone',
@@ -562,19 +571,19 @@ function config:CreateBarOptions(groupName,frame)
 		end
 		
 	elseif groupName == "TotemBar"then
-		tableExtend(optionGroup.args,{
+		config:TableExtend(optionGroup.args,{
 			["scale"] = {
 				type = "range",
 				name = "Scale", desc = "Set scale of the totem icon.",
 				min = 1, max = 4, step = .1,
 				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
 				arg = frame,
-				order=22,
+				order=62,
 			},
 			['Timer'] = {
 				type = "group",
 				name = "Timer",
-				order=40,
+				order=70,
 				args={
 					["anchorX"] = {
 						type = "range",
@@ -602,6 +611,16 @@ function config:CreateBarOptions(groupName,frame)
 						arg = frame,
 						order=26,					
 					},
+					["anchorTo"] = {
+						type = "select",
+						name = "Anchor To Frame...",
+						desc = "On which frame to anchor "..frame.unit.." to.",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckUnitFrameOption',
+						values=config.PlayerFramesToAnchorTo,
+						arg = frame,
+						order=27,					
+					},
 					["anchorFromPoint"] = {
 						type = "select",
 						name = "From edge...", desc = "Which edge to attach from on the "..frame.unit.." frame.",
@@ -621,7 +640,7 @@ function config:CreateBarOptions(groupName,frame)
 			get = 'GetUnitFrameOption', set = 'GetUnitFrameOption',
 			arg = frame,
 			values = { HORIZONTAL ="Horizontally", VERTICAL = "Vertically"},
-			order=4,
+			order=90,
 		}
 	end		
 	return optionGroup
@@ -679,6 +698,27 @@ function config:AddUnitOptionSet(frame)
 		type = 'group',
 		name = frame.unit,
 		args = {
+			['DebuffHighlight'] = {
+				type = "group",
+				name = "Debuff Highlighting",
+				order=1,
+				args={
+					["Backdrop"] = {
+						type = "toggle",
+						name = "Highlight Frame", desc = "Highlight the frame when the unit is affected by a removable debuff. Blue = Magic, Purple = Curse, Green = Poison, Brown/Yellow = Disease",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						arg = frame,
+						order=1,
+					},
+					["Icon"] = {
+						type = "toggle",
+						name = "Display Icon", desc = "Display an icon when the unit is affected by a removable debuff.",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						arg = frame,
+						order=1,
+					},
+				}
+			},
 			["headerSize"] = {
 				type = "header",
 				name = "Size",
@@ -782,6 +822,7 @@ function config:AddUnitOptionSet(frame)
 				arg = frame,
 				order=33,
 			},
+			
 		},
 	}
 
@@ -958,23 +999,102 @@ function config:debug(info,value)
  return info[#info]
 end
 
-function config:CreateStatusBarOptions(frame,bar,barName,insertOrder,settings)
-	local options = {
-		type = 'group',
-		name = barName,
-		order = insertOrder,
-		args = {
-			["height"] = {
-				type = "range",
-				name = "Height", desc = "Set the height, as a percentage of the unit frame.",
-				min = 1, max = 100, step = 1,
-				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
-				disabled ='CheckUnitFrameOption',
-				arg = bar,
-				order=11,
-			},
-		
-		},
-	}
- return options
+local defaultProfiles
+--[[ Utility functions ]]
+-- get exisiting profiles + some default entries
+local tmpprofiles = {}
+function config:getProfileList(db, common, nocurrent)
+	-- clear old profile table
+	local profiles = {}
+	
+	-- copy existing profiles into the table
+	local curr = config.addon.db:GetCurrentProfile()
+	for i,v in pairs(config.addon.db:GetProfiles(tmpprofiles)) do if not (nocurrent and v == curr) then profiles[v] = v end end
+	
+	-- add our default profiles to choose from
+	for k,v in pairs(defaultProfiles) do
+		if (common or profiles[k]) and not (k == curr and nocurrent) then
+			profiles[k] = v
+		end
+	end
+	return profiles
 end
+
+function config:getProfilesOptionsTable(db)
+		defaultProfiles = {
+			["Default"] = "Default",
+			[db.keys.char] = "Char: " .. db.keys.char,
+			[db.keys.realm] = "Realm: " .. db.keys.realm,
+			[db.keys.class] = "Class: " .. UnitClass("player")
+		}
+		
+		local tbl = {
+			profiles = {
+				type = "group",
+				name = "Profiles",
+				desc = "Manage Profiles",
+				args = {
+					reset = {
+						order = 1,
+						type = "execute",
+						name = "Reset Profile",
+						desc = "Reset the current profile to the default",
+						func = function() db:ResetProfile() end,
+					},
+					spacer1 = {
+						order = 2,
+						type = "header",
+						name = "Choose a Profile",
+						desc = "Set the active profile of this character.",
+					},
+					new = {
+						name = "New",
+						type = "input",
+						order = 3,
+						get = function() return false end,
+						set = function(info, value) db:SetProfile(value) end,
+					},
+					choose = {
+						name = "Current",
+						type = "select",
+						order = 4,
+						get = function() return db:GetCurrentProfile() end,
+						set = function(info, value) db:SetProfile(value) end,
+						values = function() return config:getProfileList(db, true) end,
+					},
+					spacer2 = {
+						type = "header",
+						order = 5,
+						name = "Copy a Profile",
+					},
+					copyfrom = {
+						order = 6,
+						type = "select",
+						name = "Copy From",
+						desc = "Copy the settings from another profile",
+						get = function() return false end,
+						set = function(info, value) db:CopyProfile(value) end,
+						values = function() return config:getProfileList(db, nil, true) end,
+					},
+					spacer3 = {
+						type = "header",
+						order = 7,
+						name = "Delete a Profile",
+					},
+					delete = {
+						order = 8,
+						type = "select",
+						name = "Delete a Profile",
+						desc = "Deletes a profile from the database.",
+						get = function() return false end,
+						set = function(info, value) db:DeleteProfile(value) end,
+						values = function() return config:getProfileList(db, nil, true) end,
+						confirm = true,
+						confirmText = "Are you sure you want to delete the selected profile?",
+					},
+				},
+			},
+		}
+		return tbl
+end
+

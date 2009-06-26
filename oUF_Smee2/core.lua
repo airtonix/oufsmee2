@@ -230,11 +230,11 @@ local function UpdateThreat(self, event, unit)
 end
 
 local function PostUpdateHealth(self, event, unit, bar, min, max)
-	bar:SetStatusBarColor(0.25, 0.25, 0.25)      -- Default statusbar color  
+	local default = self.db.bars.Health.StatusBarColor
 	if (UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
 		color = self.colors.tapped
 	else
-		bar:SetStatusBarColor(.25,.25,.35)      -- Default statusbar color
+		bar:SetStatusBarColor(unpack(default))      -- Default statusbar color
 	end
 
 	if self.db.bars.Health.reverse then 
@@ -259,46 +259,6 @@ local function PostUpdatePower(self, event, unit, bar, min, max)
 		bar:SetMinMaxValues(0, max)
 		bar:SetValue(min)
 	end
-end
-
-local msg
-local function CastbarPostCastStart(self, event, unit, name, rank, text, castid)
-end
-local function CastbarPostCastFailed(self, event, unit, spellname, spellrank, castid)
-end
-local function CastbarPostCastInterrupted(self, event, unit, spellname, spellrank, castid)
-end
-local function CastbarPostCastDelayed(self, event, unit, name, rank, text)
-end
-local function CastbarPostCastStop(self, event, unit, spellname, spellrank, castid)
-end
-local function CastbarPostChannelStart(self, event, unit, name, rank, text)
-	self.bars.Castbar.isFishing = (name == "Fishing")
-	self:CustomPositions(event)
-end
-local function CastbarPostChannelUpdate(self, event, unit, name, rank, text)
-end
-local function CastbarPostChannelStop(self, event, unit, spellname, spellrank)
-	self.bars.Castbar.isFishing = (spellname == "Fishing")
-	self:CustomPositions(event)
-	self.bars.Castbar:SetStatusBarColor(unpack(self.bars.Castbar.defaultStatusBarColor))	
-end
-
-local function CastbarCustomDelayText(self, duration)
-	self.Time:SetFormattedText("%.1f", duration)
-end
-local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spelltarget)
-end
-local UNIT_SPELLCAST_SUCCEEDED = function (self,event, unit, spell, spellrank)
-end
-
-local function CastbarCustomTimeText(self, duration)
-		if self.casting then
-			self.Time:SetFormattedText("%.1f", self.max - duration)
-		elseif self.channeling then
-			self:FishingFlasher(duration)
-			self.Time:SetFormattedText("%.1f", duration)
-		end
 end
 
 --[[----------------------------------------
@@ -557,17 +517,7 @@ function makeCombatFeedbackText(self)
 		object =  self.CombatFeedbackText
 	}
 end
-local function CastbarFishingFlasher(self,duration)
-	if(self.isFishing)then
-		if (duration <= 18 and duration > 16) or (duration <= 14 and duration > 12) or (duration <= 8 and duration > 6) or (duration <= 4 and duration > 2)then
-			self:SetStatusBarColor(0,1,0)	
-		else
-			self:SetStatusBarColor(unpack(self.defaultStatusBarColor))	
-		end
-	else
-		self:SetStatusBarColor(unpack(self.defaultStatusBarColor))	
-	end
-end
+
 
 local function CustomPositions(self,event)
 	local bar = self.bars.Castbar
@@ -580,10 +530,69 @@ local function CustomPositions(self,event)
 	end
 	
 	if(event == "UNIT_SPELLCAST_CHANNEL_STOP")then
-		bar:ClearAllPoints()
-		bar:SetPoint(anchorFromPoint,self,db.anchorToPoint,db.anchorX,db.anchorY)
-		bar:SetFrameStrata(db.frameStrata)
+		if(bar.isFishing)then
+			bar:ClearAllPoints()
+			bar:SetPoint(anchorFromPoint,self,db.anchorToPoint,db.anchorX,db.anchorY)
+			bar:SetFrameStrata(db.frameStrata)
+		end
 	end
+end
+
+
+local function CastbarFishingFlasher(self,duration)
+	if(self.isFishing)then
+		if (duration <= 18 and duration > 16) or (duration <= 14 and duration > 12) or (duration <= 8 and duration > 6) or (duration <= 4 and duration > 2)then
+			self:SetStatusBarColor(0,1,0)	
+		else
+			self:SetStatusBarColor(unpack(self.defaultStatusBarColor))	
+		end
+	else
+		self:SetStatusBarColor(unpack(self.defaultStatusBarColor))	
+	end
+end
+
+local msg
+local function CastbarPostCastStart(self, event, unit, name, rank, text, castid)
+end
+local function CastbarPostCastFailed(self, event, unit, spellname, spellrank, castid)
+end
+local function CastbarPostCastInterrupted(self, event, unit, spellname, spellrank, castid)
+end
+local function CastbarPostCastDelayed(self, event, unit, name, rank, text)
+end
+local function CastbarPostCastStop(self, event, unit, spellname, spellrank, castid)
+end
+local function CastbarPostChannelStart(self, event, unit, name, rank, text)
+	if(unit=="player")then
+		self.bars.Castbar.isFishing = (name == "Fishing")
+		self:CustomPositions(event)
+	end
+end
+local function CastbarPostChannelUpdate(self, event, unit, name, rank, text)
+end
+local function CastbarPostChannelStop(self, event, unit, spellname, spellrank)
+	if(unit=="player")then
+		self:CustomPositions(event)
+		self.bars.Castbar.isFishing = (spellname == "Fishing")
+		self.bars.Castbar:SetStatusBarColor(unpack(self.bars.Castbar.defaultStatusBarColor))	
+	end
+end
+
+local function CastbarCustomDelayText(self, duration)
+	self.Time:SetFormattedText("%.1f", duration)
+end
+local UNIT_SPELLCAST_SENT = function (self,event, unit, spell, spellrank,spelltarget)
+end
+local UNIT_SPELLCAST_SUCCEEDED = function (self,event, unit, spell, spellrank)
+end
+
+local function CastbarCustomTimeText(self, duration)
+		if self.casting then
+			self.Time:SetFormattedText("%.1f", self.max - duration)
+		elseif self.channeling then
+			self:FishingFlasher(duration)
+			self.Time:SetFormattedText("%.1f", duration)
+		end
 end
 
 local function makeCastBar(self)
@@ -627,7 +636,7 @@ local function makeCastBar(self)
 		bar.SafeZone:SetVertexColor(unpack(barDb.SafeZone.colour))
 		bar.SafeZone:SetPoint("TOPRIGHT")
 		bar.SafeZone:SetPoint("BOTTOMRIGHT")	
-		bar.accurate=true
+		bar.SafeZone.accurate = barDb.SafeZone.accurate
 	end
 		
 	bar:ClearAllPoints()
@@ -947,16 +956,34 @@ local layout = function(self, unit)
 	self.Leader:SetPoint("TOPLEFT", self, 0, 4)
 	self.Leader:SetHeight(10)
 	self.Leader:SetWidth(10)
--- Raid Icon
-	self.RaidIcon = health:CreateTexture(nil, "OVERLAY")
-	self.RaidIcon:SetPoint("TOP", self, 0, 4)
-	self.RaidIcon:SetHeight(10)
-	self.RaidIcon:SetWidth(10)
+-- Raid Assistant / Raid Officer
+	self.Assistant = health:CreateTexture(nil, "OVERLAY")
+	self.Assistant:SetPoint("TOPLEFT", self, 0, 4)
+	self.Assistant:SetHeight(10)
+	self.Assistant:SetWidth(10)
+
 --Master Loot Icon
 	self.MasterLooter = health:CreateTexture(nil, "OVERLAY")
 	self.MasterLooter:SetPoint("TOPLEFT", self, 8, 4)
 	self.MasterLooter:SetHeight(10)
 	self.MasterLooter:SetWidth(10)
+
+	self.MainTank = health:CreateTexture(nil, "OVERLAY")
+	self.MainTank:SetPoint("TOPLEFT", self, 16, 4)
+	self.MainTank:SetHeight(10)
+	self.MainTank:SetWidth(10)
+
+	self.MainAssist = health:CreateTexture(nil, "OVERLAY")
+	self.MainAssist:SetPoint("TOPLEFT", self, 16, 4)
+	self.MainAssist:SetHeight(10)
+	self.MainAssist:SetWidth(10)
+
+	
+-- Raid Icon
+	self.RaidIcon = health:CreateTexture(nil, "OVERLAY")
+	self.RaidIcon:SetPoint("TOP", self, 0, 4)
+	self.RaidIcon:SetHeight(10)
+	self.RaidIcon:SetWidth(10)
 
 	self:SetAttribute("initial-height", self.db.height)		-- Size
 	self:SetAttribute("initial-width", self.db.width)		-- Size		
@@ -1071,12 +1098,18 @@ local layout = function(self, unit)
 --=======================--
 --	 DEBUFF HIGHLIGHTING   --
 --=======================--
-	self.DebuffHighlightBackdrop = self.db.DebuffHighlightBackdrop
+
+	self.DebuffHighlightBackdrop = self.db.DebuffHighlight.Backdrop
+	self.DebuffHighlightUseTexture = self.db.DebuffHighlight.Icon
+	self.DebuffHighlightAlpha = self.db.DebuffHighlight.BackDropAlpha
+	self.DebuffHighlightFilter = self.db.DebuffHighlight.Filter
 	
---=======================--
--- 
---
-	
+	local dbh = self.Health:CreateTexture(nil, "OVERLAY")
+			 dbh:SetWidth(16)
+			 dbh:SetHeight(16)
+			 dbh:SetPoint("CENTER", self, "CENTER")
+	self.DebuffHighlight = dbh
+		
 --===============--
 --	 EVENT HOOKS   --
 --===============--
@@ -1113,6 +1146,11 @@ function addon:Error(msg)
 end
 
 function addon:HideBlizzard()
+	--[[
+		TODO: this toggles blizzard buff frame off.
+					it needs to be able to restore what it modifies.
+	--]]
+	
 	local hide = self.db.profile.hideBlizzard
 	if(hide.TemporaryEnchantFrame) then 
 		TemporaryEnchantFrame:Hide()
@@ -1131,6 +1169,7 @@ function addon:UpdateFontObjects(obj,size,name,outline)
 	local db = self.db.profile
 	
 	if obj~=nil and obj.FontObjects then	
+
 		for index,font in pairs(obj.FontObjects)do
 			if(font.object:GetObjectType() == "FontString")then
 				font.object:SetFont(addon.LSM:Fetch(addon.LSM.MediaType.FONT, db.frames.font.name),db.frames.font.size,db.frames.font.outline) 
@@ -1148,10 +1187,10 @@ function addon:UpdateFontObjects(obj,size,name,outline)
 				self:UpdateFontObjects(frame)
 			end
 		end
+
 	end
 	
 end
-
 
 function addon:ImportSharedMedia()
 	if(self.LSM) then self.SharedMediaActive = true else return end

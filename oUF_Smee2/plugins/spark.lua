@@ -242,7 +242,7 @@ end
 -- Init stuff  ----------------------------------
 -------------------------------------------------
 
-function reapplySettings(object)
+local function reapplySettings(object)
 	object = object or oUF.units["player"]
 	if not object then error("Must pass an object to oUF_PowerSpark_ReapplySettings") return end
 	local s = object.Spark

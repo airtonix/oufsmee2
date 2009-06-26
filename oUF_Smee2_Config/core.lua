@@ -6,6 +6,11 @@ local configAddon = _G[configAddonName]
 configAddon.addon = addon
 local oUF = Smee2_oUFEmbed
 
+function configAddon:TableExtend(array,table)
+	for index,data in pairs(table)do
+		array[index] = data
+	end
+end
 
 --======================--
 --==<<	ACE3 SETUP	>>==--
@@ -36,8 +41,10 @@ function configAddon:OnEnable()
 	self:Debug("Enabling")
 	self:SetupUnitOptions(addon.units)
 	self:SetupTagOptions(oUF.TagsLogicStrings)
+--	self:TableExtend(self.options.args,self:getProfilesOptionsTable(addon.db))
+	
 	LibStub("AceConfig-3.0"):RegisterOptionsTable(configAddonName, self.options,layoutName)
-	-- RegisterOptions("Profiles", LibStub('AceDBOptions-3.0'):GetOptionsTable(addon.db))
+	
 	self.optionsFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions(configAddonName, layoutName)
 	self:Debug("Enabled")
 end

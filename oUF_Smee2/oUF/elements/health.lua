@@ -6,6 +6,7 @@
 	 - colorTapping
 	 - colorDisconnected
 	 - colorHappiness
+	 
 	 - colorClass (Colors player units based on class)
 	 - colorClassPet (Colors pet units based on class)
 	 - colorClassNPC (Colors non-player units based on class)

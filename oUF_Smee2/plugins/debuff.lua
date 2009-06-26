@@ -16,13 +16,14 @@ local origColors = {}
 local origBorderColors = {}
 local origPostUpdateAura = {}
 local ignoreList = { "Arcane Blast" }
+
 local function GetDebuffType(unit, filter)
 	if not UnitCanAssist("player", unit) then return nil end
 	local i = 1
 	while true do
 		local name, _, texture, _, debufftype = UnitAura(unit, i, "HARMFUL")
 		if not texture then break end
-		if ignoreList[name] then break end
+		if ignoreList[name]~=nil then break end
 		if debufftype and not filter or (filter and dispellist[debufftype]) then
 			return debufftype, texture
 		end

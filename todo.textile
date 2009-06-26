@@ -1,0 +1,18 @@
+h1. Todo
+
+This document tracks things that need to be improved within this project.
+
+
+h3. oUF_Smee2/core.lua
+
+* Toggle Default Blizzard (De)buffs
+ This toggles blizzard buff frame off.
+ It needs to be able to restore what it modifies.
+
+* Debuff Highlighting
+ Doesn't toggle between icons and texture without a interface reload.
+ 
+* Status Icon Options
+  Full range of status icons require option widgets to modify their visibilty and positions.
+
+* TargetTarget doesn't always spawn.
