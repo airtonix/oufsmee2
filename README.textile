@@ -2,6 +2,7 @@ h2. Summary
 
 
 h2. Instructions
+
 The configuration interface can be accessed via the follwoing methods : 
 * chat slash command /oufsmee
 
