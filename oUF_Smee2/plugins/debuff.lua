@@ -31,30 +31,38 @@ local function GetDebuffType(unit, filter)
 	end
 end
 
+
+local function TurnOffIndicator(object)
+	if object.DebuffHighlightBackdrop then
+		local color = origColors[object]
+		object:SetBackdropColor(color.r, color.g, color.b, color.a)
+		color = origBorderColors[object]
+		object:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
+	elseif object.DebuffHighlightUseTexture then
+		object.DebuffHighlight:SetTexture(nil)
+	else
+		local color = origColors[object]
+		object.DebuffHighlight:SetVertexColor(color.r, color.g, color.b, color.a)
+	endend
+
+local function TurnOnIndicator(object,type)
+	local color = DebuffTypeColor[type]
+	if object.DebuffHighlightBackdrop then
+		object:SetBackdropColor(color.r, color.g, color.b, object.DebuffHighlightAlpha or 1)
+	elseif object.DebuffHighlightUseTexture then
+		object.DebuffHighlight:SetTexture(texture)
+	else
+		object.DebuffHighlight:SetVertexColor(color.r, color.g, color.b, object.DebuffHighlightAlpha or .5)
+	end
+end
+
 local function Update(object, event, unit)
 	if object.unit ~= unit  then return end
 	local debuffType, texture  = GetDebuffType(unit, object.DebuffHighlightFilter)
 	if debuffType then
-		local color = DebuffTypeColor[debuffType] 
-		if object.DebuffHighlightBackdrop then
-			object:SetBackdropColor(color.r, color.g, color.b, object.DebuffHighlightAlpha or 1)
-		elseif object.DebuffHighlightUseTexture then
-			object.DebuffHighlight:SetTexture(texture)
-		else
-			object.DebuffHighlight:SetVertexColor(color.r, color.g, color.b, object.DebuffHighlightAlpha or .5)
-		end
+		TurnOnIndicator(object,debuffType)
 	else
-		if object.DebuffHighlightBackdrop then
-			local color = origColors[object]
-			object:SetBackdropColor(color.r, color.g, color.b, color.a)
-			color = origBorderColors[object]
-			object:SetBackdropBorderColor(color.r, color.g, color.b, color.a)
-		elseif object.DebuffHighlightUseTexture then
-			object.DebuffHighlight:SetTexture(nil)
-		else
-			local color = origColors[object]
-			object.DebuffHighlight:SetVertexColor(color.r, color.g, color.b, color.a)
-		end
+		TurnOffIndicator(object)
 	end
 end
 
@@ -85,9 +93,11 @@ local function Enable(object)
 	return true
 end
 
+
 local function Disable(object)
 	if object.DebuffHighlightBackdrop or object.DebuffHighlight then
 		object:UnregisterEvent("UNIT_AURA", Update)
+		TurnOffIndicator(object)
 	end
 end
 

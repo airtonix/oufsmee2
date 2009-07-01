@@ -1,9 +1,9 @@
-"oUF_Smee2, oUF_Smee2_Config & oUF_TagEditor" is Copyright (c) 2004-2009 L. Tremblay.  
+"oUF_Smee2, oUF_Smee2_Config" are Copyright (c) 2004-2009 L. Tremblay.  
 
 1. Definitions
 "Licence" means the terms and conditions as set out in this Agreement.
 
-"Software" means this addon, entitled "oUF_Smee2, oUF_Smee2_Config & oUF_TagEditor", which is composed of Lua and/or XML files containing the addon source code, the TOC file, and may include other files including but not limited to image files and sound files.
+"Software" means this addon, entitled "oUF_Smee2, oUF_Smee2_Config", which is composed of Lua and/or XML files containing the addon source code, the TOC file, and may include other files including but not limited to image files and sound files.
 
 "Copyright Owner" means L. Tremblay, a.k.a Satrina, the author of the Software, and his designated assignees or heirs.
 

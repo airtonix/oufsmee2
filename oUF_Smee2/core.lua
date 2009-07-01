@@ -1,70 +1,133 @@
 local _G = getfenv(0)
-local oUF = Smee2_oUFEmbed
-local _,playerClass = UnitClass("player")
-local tinsert = table.insert
 local layoutName = "oUF_Smee2"
 local configName = layoutName .. "_Config"
+local configAddon
 _G[layoutName] = LibStub("AceAddon-3.0"):NewAddon(layoutName,"AceConsole-3.0")
-local addon = _G[layoutName];
-	addon.LSM = LibStub("LibSharedMedia-3.0")
-	addon.build = {}
-	addon.build.version, addon.build.build, addon.build.date, addon.build.tocversion = GetBuildInfo()
 
-	
+local addon = _G[layoutName];
+addon.LSM = LibStub("LibSharedMedia-3.0")
+addon.build = {}
+addon.build.version, addon.build.build, addon.build.date, addon.build.tocversion = GetBuildInfo()
+
+local oUF = Smee2_oUFEmbed
+
+----------------------
+--     Locals
+local _,playerClass = UnitClass("player")
+local tinsert = table.insert
+local function dummy(arg) end
+
+----------------------
+--		tools
+local function round(num, idp)
+  if idp and idp>0 then  return math.floor(num * mult + 0.5) / (10^idp)  end
+  return math.floor(num + 0.5)
+end
+
+local function numberize(val)
+	if(val >= 1e3) then return ("%.1fk"):format(val / 1e3)
+	elseif (val >= 1e6) then return ("%.1fm"):format(val / 1e6)
+	else return val
+	end
+end
+
+function Hex(r, g, b)
+	if type(r) == "table" then 
+		if r.r then r, g, b = r.r, r.g, r.b else r, g, b = unpack(r) end
+	else
+		r,g,b = .25,.25,.25
+	end
+	return string.format("|cff%02x%02x%02x", r*255, g*255, b*255)
+end
+
+
+----------------------
+--     DEBUG
+function addon:concatLeaves(branch)
+	local picture = ""
+		for index,value in pairs(branch) do
+			picture = picture .. "["..index.."] - "..tostring(value).."\n"
+		end
+	return picture
+end
+function addon:ToggleDebug()
+	self.db.profile.enabledDebugMessages=not self.db.profile.enabledDebugMessages
+	self:Print(SELECTED_CHAT_FRAME,"Debug messages : "..(self.db.profile.enabledDebugMessages and "ON" or "OFF"))
+end
+function addon:Debug(msg)
+	if not self.db.profile.enabledDebugMessages then return end
+	self:Print(SELECTED_CHAT_FRAME,"|cFFFFFF00Debug : |r"..msg)
+end
+function addon:Error(msg)
+	self:Print(SELECTED_CHAT_FRAME,"|cFFFF0000Error : |r"..msg)
+end
+
+
 ---------------
 --      LDB      --
 ---------------
-local LDB = LibStub:GetLibrary("LibDataBroker-1.1"):NewDataObject(layoutName, {
+local ldb = LibStub:GetLibrary("LibDataBroker-1.1"):NewDataObject(layoutName, {
 	label = "|cFF006699oUF|r_|cFFFF3300Smee|r",
 	type = "launcher",
-	icon = "Interface\\Icons\\Spell_Nature_StormReach",
+	icon = "Interface\\Icons\\INV_Letter_05",
 })
-
-
-function LDB.OnClick(self, button)
-	if button == "RightButton" then
-		if addon.db.profile.enabled then
-			if IsAltKeyDown() then
-				if IsControlKeyDown() then
-					-- alt + ctrl
-				elseif IsShiftKeyDown() then
-					-- alt + shift
-				else
-					-- only alt
-				end				
-			elseif IsShiftKeyDown()  then
-				if IsControlKeyDown() then
-					-- shift + ctrl
-				else
-					-- only shift
+function ldb.OnClick(self, button)
+	if addon.db.profile.enabled then
+		if button == "RightButton" then
+				if IsAltKeyDown() then
+					if IsControlKeyDown() then			-- alt + ctrl
+					elseif IsShiftKeyDown() then		-- alt + shift
+					else													-- alt
+					end				
+				elseif IsShiftKeyDown()  then
+					if IsControlKeyDown() then			-- shift + ctrl
+					else													-- shift
+						addon:ToggleFrameLock(nil,not addon.db.profile.frames.locked)
+					end				
+				elseif IsControlKeyDown() then		-- Ctrl
+				else														-- No Modifier
 					addon:ToggleDebug()
-				end				
-			elseif IsControlKeyDown() then
-				--
-			else
-				addon:ToggleFrameLock(nil,not addon.db.profile.frames.locked)
-			end
-		else
-			--addon:ToggleActive(true)
+				end
+		elseif button == "LeftButton" then
+			addon:OpenConfig()
 		end
-	elseif button == "LeftButton" then
-		addon:OpenConfig()
+	else
+
 	end
 end
-function LDB.OnTooltipShow(tt)
+function ldb.OnTooltipShow(tt)
 	tt:AddLine(layoutName)
-	tt:AddLine("Debugging "..(addon.enabledDebugMessages and "en" or "dis").."abled.")
-	tt:AddLine("--")
-	tt:AddLine("Left Click : Open Config")
-	tt:AddLine("Right Click : Unlock Frames")
-	tt:AddLine("Shift + Right Click : Toggle Debug Messages")
+	tt:AddLine(".: |cffffffffKeyBinds|r")
+	tt:AddDoubleLine("   |cffccffccLeft Click|r","Open Config")
+	tt:AddDoubleLine("   |cffccffccRight Click|r","Toggle Debug Messages")
+	tt:AddDoubleLine("   |cff66ff66Shift|r + |cffccffccRight Click|r","Unlock Frames")
+	tt:AddLine(" ")
+	tt:AddDoubleLine(".: |cffffffffDebugging |r","|cff"..(addon.db.profile.enabledDebugMessages and "00ff00en" or "ff0000dis").."abled|r")
+end
+
+-----------------------
+-- Core Functions
+
+function addon:OpenConfig()
+	if(not IsAddOnLoaded(configName)) then
+		LoadAddOn(configName)
+		if(not IsAddOnLoaded(configName))then return end
+	end
+
+	local ace3Config = LibStub("AceConfigDialog-3.0")
+	if(ace3Config.OpenFrames[configName])then
+		ace3Config:Close(configName)
+	else
+		InterfaceOptionsFrame:Hide()
+		ace3Config:SetDefaultSize(configName, 480, 550)
+		ace3Config:Open(configName)
+	end
 end
 
 function addon:ToggleFrameLock(obj,value)	
 	local db = self.db.profile
 	value = value or false
-	if obj ~= nil then
-		
+	if obj ~= nil then		
 		if value == false then	
 			obj:SetBackdropColor(.2,1,.2,.5)
 			obj:EnableMouse(true);
@@ -81,12 +144,13 @@ function addon:ToggleFrameLock(obj,value)
 				if(this.isMoving == true)then
 					this:StopMovingOrSizing()
 				end
+					local db = db.frames.units[this.unit]
 					local from, obj, to,x,y = this:GetPoint();
-					this.db.anchorFromPoint = from;
-					this.db.anchorTo = obj or 'UIParent';
-					this.db.anchorToPoint = to;
-					this.db.anchorX = x;
-					this.db.anchorY = y;
+					db.anchorFromPoint = from;
+					db.anchorTo = obj or 'UIParent';
+					db.anchorToPoint = to;
+					db.anchorX = x;
+					db.anchorY = y;
 			end);
 		else
 			obj:SetUserPlaced(false)
@@ -99,7 +163,6 @@ function addon:ToggleFrameLock(obj,value)
 		local unit,isRaid,isParty
 		for index,frame in pairs(oUF.objects)do
 			unit = frame.unit
-
 			if(unit ~= nil)then
 				isRaid = unit:gmatch("raid")()        
 				isParty = unit:gmatch("party")()
@@ -107,23 +170,41 @@ function addon:ToggleFrameLock(obj,value)
 					self:ToggleFrameLock(frame,value)
 				end
 			end
-
 		end
+		self:Print("Frames ".. (value and "L" or "Unl").."ocked")
 	end	
 end
 
-function addon:ToggleDebug()
-	self.db.profile.enabledDebugMessages=not self.db.profile.enabledDebugMessages
-	self:Print("Debug messages : "..(self.db.profile.enabledDebugMessages and "ON" or "OFF"))
+
+function addon:ImportSharedMedia()
+	if(self.LSM) then self.SharedMediaActive = true else return end
+	local db = self.db.profile
+	if(db.textures)then
+		if(db.textures.borders)then
+			for name,path in pairs(self.db.profile.textures.statusbars)do
+				self.LSM:Register(self.LSM.MediaType.STATUSBAR, name, path)
+			end
+		end	
+		if(db.textures.borders)then
+			for name,path in pairs(self.db.profile.textures.borders)do
+				self.LSM:Register(self.LSM.MediaType.BORDER, name, path)
+			end
+		end
+	end	
+	if(db.fonts)then
+		for name,data in pairs(db.fonts)do
+			self.LSM:Register(self.LSM.MediaType.FONT, name, data.name)
+		end
+	end
 end
 
-
-local function dummy(arg) end
-
+----------------------
+-- helper functions 
 local function GetClassColor(unit)
 	local _,unitClass = UnitClass(unit)
 	return unpack(addon.db.profile.colors.class[unitClass])
 end
+
 local function menu(self)
 	local unit,cunit = self.unit:sub(1, -2), self.unit:gsub("(.)", string.upper, 1)
 	if(unit == "party" or unit == "partypet") then
@@ -133,25 +214,7 @@ local function menu(self)
 	end
 end 
 
-----------------------
--- helper functions --
-----------------------
-local function round(num, idp)
-  if idp and idp>0 then  return math.floor(num * mult + 0.5) / (10^idp)  end
-  return math.floor(num + 0.5)
-end
-local function numberize(val)
-	if(val >= 1e3) then return ("%.1fk"):format(val / 1e3)
-	elseif (val >= 1e6) then return ("%.1fm"):format(val / 1e6)
-	else return val
-	end
-end
-function Hex(r, g, b)
-	if type(r) == "table" then 
-		if r.r then r, g, b = r.r, r.g, r.b else r, g, b = unpack(r) end
-	end
-	return string.format("|cff%02x%02x%02x", r*255, g*255, b*255)
-end
+
 local function GetDifficultyColor(level)
 	if level == '??' then return  .69,.31,.31
 	else
@@ -169,6 +232,7 @@ local function GetDifficultyColor(level)
 		end
 	end
 end
+
 local function GetFormattedTime(s)
 	local auraDb = addon.db.profile.auras.timers
 	local DAY,HOUR,MINUTE,SHORT = auraDb.values.DAY,auraDb.values.HOUR,auraDb.values.MINUTE,auraDb.values.SHORT
@@ -186,6 +250,7 @@ local function GetFormattedTime(s)
 	end
 	return format("%0.1f", s), 0.1
 end
+
 local function GetFormattedFont(s)
 	local auraDb = addon.db.profile.auras.timers
 	local DAY,HOUR,MINUTE,SHORT = auraDb.values.DAY,auraDb.values.HOUR,auraDb.values.MINUTE,auraDb.values.SHORT
@@ -230,14 +295,15 @@ local function UpdateThreat(self, event, unit)
 end
 
 local function PostUpdateHealth(self, event, unit, bar, min, max)
-	local default = self.db.bars.Health.StatusBarColor
+	local db = addon.db.profile.frames.units[self.unit]
+	local default = db.bars.Health.StatusBarColor
 	if (UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
 		color = self.colors.tapped
 	else
 		bar:SetStatusBarColor(unpack(default))      -- Default statusbar color
 	end
 
-	if self.db.bars.Health.reverse then 
+	if db.bars.Health.reverse then 
 		bar:SetMinMaxValues(0, max)
 		bar:SetValue(max - min)
 	else
@@ -248,11 +314,13 @@ local function PostUpdateHealth(self, event, unit, bar, min, max)
 end
 
 local function PostUpdatePower(self, event, unit, bar, min, max)
+	local db = addon.db.profile.frames.units[self.unit]
+
 	if (UnitIsGhost(unit) or UnitIsDead(unit) or not UnitIsConnected(unit)) then 
 		min = 0
 	end
 
-	if self.db.bars.Power.reverse then 
+	if db.bars.Power.reverse then 
 		bar:SetMinMaxValues(0, max)
 		bar:SetValue(max - min)
 	else
@@ -367,8 +435,10 @@ end
 
 local function updateAuraIcon(self,event)
 	local db = addon.db.profile
+	local frameDb = db.frames.units[self.unit]
 	local auraGroup = self:GetParent()
-	local name,size,outline = (addon.LSM:Fetch('font',db.auras.font.name) or self.db.profile.fonts.default), db.auras.font.size, db.auras.font.outline
+	
+	local name,size,outline = (addon.LSM:Fetch('font',db.auras.font.name) or db.fonts.default), db.auras.font.size, db.auras.font.outline
 	local frameUnit = self.parent:GetParent().unit
 	self.count:SetFont(name,size,outline)
 --	self.ownership:Hide() 
@@ -403,7 +473,6 @@ local function updateAuraIcon(self,event)
 			self.overlay:Hide()
 		end
 	end
-
 end
 
 local function ShowAuraTooltip(self,motion)
@@ -532,7 +601,7 @@ local function CustomPositions(self,event)
 	if(event == "UNIT_SPELLCAST_CHANNEL_STOP")then
 		if(bar.isFishing)then
 			bar:ClearAllPoints()
-			bar:SetPoint(anchorFromPoint,self,db.anchorToPoint,db.anchorX,db.anchorY)
+			bar:SetPoint(db.anchorFromPoint,self,db.anchorToPoint,db.anchorX,db.anchorY)
 			bar:SetFrameStrata(db.frameStrata)
 		end
 	end
@@ -819,12 +888,42 @@ function UpDateFrameSize(self)
 			self.bars[index]:SetHeight( ((self.db.height - 3) / 100 ) * self.db.bars[index].height )
 		end
 	end
-	oUF_PowerSpark_ReapplySettings(self)
+	self:UpdateSpark()
+end
+
+function addon:UpdateFontObjects(obj)
+	local db = self.db.profile
+	local fontStyle
+	if obj~=nil and obj.FontObjects then	
+		local fontdb = db.frames.units[obj.unit].FontObjects
+		for index,font in pairs(obj.FontObjects)do
+			if(fontdb[index]~=nil)then
+				if(font.object:GetObjectType() == "FontString")then
+					if(fontdb[index].custom)then
+						fontStyle = fontdb[index]
+					else
+						fontStyle = db.frames.font
+					end
+					font.object:SetFont(addon.LSM:Fetch(addon.LSM.MediaType.FONT,fontStyle.name), fontStyle.size, fontStyle.outline) 
+				end
+			end
+		end
+	else
+
+		for index,frame in pairs(addon.units)do
+			if frame.unit ~= nil then 
+				self:UpdateFontObjects(frame)
+			end
+		end
+
+	end
+	
 end
 
 function addon:makeFontObject(frame,name,data)
 	local db = addon.db.profile	
 	local parent = frame.elements and frame.elements[data.anchorTo] or frame
+	local fontStyle = data.custom and {name = data.name, size = data.size, outline = data.outline} or db.frames.font
 	
 	-- make our font object, parenting it to the supplied anchor point.
 	local fontObject = parent:CreateFontString(nil, "OVERLAY")
@@ -832,8 +931,8 @@ function addon:makeFontObject(frame,name,data)
 			  fontObject:SetJustifyV(data.justifyV)
 			  fontObject:SetPoint(data.anchorFromPoint, parent,data.anchorToPoint, data.anchorX, data.anchorY)
 
-			  local fontDb = db.frames.font -- setting this to the global font option for now, till i work out a per-frame policy.
-			  fontObject:SetFont((self.LSM:Fetch('font',fontDb.name) or self.db.profile.fonts.default), fontDb.size, fontDb.outline)
+			   -- setting this to the global font option for now, till i work out a per-frame policy.
+			  fontObject:SetFont((self.LSM:Fetch('font',fontStyle.name)), fontStyle.size, fontStyle.outline)
 
 	-- if the parent frame is the unitframe and therefore has an UpdateTag function, use it.			
 	if(frame.Tag~=nil and data.tag~=nil)then
@@ -852,14 +951,11 @@ function addon:makeFontObject(frame,name,data)
 	return fontObject
 end
 
---==========================--
---							--
---		NORMAL STYLE		--
---							--
---==========================--
+------------------------------
+--		MAIN STYLE FUNCTION
 
 local layout = function(self, unit)
-	local db = addon.db.profile	
+	local db = addon.db.profile
 	self.FontObjects = {}
 	self.Indicators = {}
 	self.db = db.frames.units[unit]
@@ -943,7 +1039,7 @@ local layout = function(self, unit)
 	self.bars.Power = power
 	self.Power = power
 	
-	for index, data in pairs(self.db.FontObjects) do
+	for index, data in pairs(db.frames.units[self.unit].FontObjects) do
 		self[index] = addon:makeFontObject(self,index,data)
 	end
 
@@ -961,24 +1057,21 @@ local layout = function(self, unit)
 	self.Assistant:SetPoint("TOPLEFT", self, 0, 4)
 	self.Assistant:SetHeight(10)
 	self.Assistant:SetWidth(10)
-
 --Master Loot Icon
 	self.MasterLooter = health:CreateTexture(nil, "OVERLAY")
 	self.MasterLooter:SetPoint("TOPLEFT", self, 8, 4)
 	self.MasterLooter:SetHeight(10)
 	self.MasterLooter:SetWidth(10)
-
+-- MainTank
 	self.MainTank = health:CreateTexture(nil, "OVERLAY")
 	self.MainTank:SetPoint("TOPLEFT", self, 16, 4)
 	self.MainTank:SetHeight(10)
 	self.MainTank:SetWidth(10)
-
+-- MainAssist
 	self.MainAssist = health:CreateTexture(nil, "OVERLAY")
 	self.MainAssist:SetPoint("TOPLEFT", self, 16, 4)
 	self.MainAssist:SetHeight(10)
-	self.MainAssist:SetWidth(10)
-
-	
+	self.MainAssist:SetWidth(10)	
 -- Raid Icon
 	self.RaidIcon = health:CreateTexture(nil, "OVERLAY")
 	self.RaidIcon:SetPoint("TOP", self, 0, 4)
@@ -1007,86 +1100,69 @@ local layout = function(self, unit)
 		self.Resting:SetTexture('Interface\\CharacterFrame\\UI-StateIcon')
 		self.Resting:SetTexCoord(0, 0.5, 0, 0.42)
 
-		if IsAddOnLoaded("oUF_PowerSpark") then
-			self.Spark = power:CreateTexture(nil, "OVERLAY")
-			self.Spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
-			self.Spark:SetVertexColor(1, 1, 1, 0.8)
-			self.Spark:SetBlendMode("ADD")
-			self.Spark:SetHeight(power:GetHeight()*4)
-			self.Spark:SetWidth(power:GetHeight())
-		end
+		self.Spark = power:CreateTexture(nil, "OVERLAY")
+		self.Spark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
+		self.Spark:SetVertexColor(1, 1, 1, 0.8)
+		self.Spark:SetBlendMode("ADD")
+		self.Spark:SetHeight(power:GetHeight()*4)
+		self.Spark:SetWidth(power:GetHeight())
 		
 		addon:makeRuneBar(self)
 		addon:makeTotemBar(self)
 		self.UpdateTotemBar = UpdateTotemBar
-		self:UpdateTotemBar()		
+		self:UpdateTotemBar()
+		
 		if IsAddOnLoaded("CoolLine") and self.db.bars.CoolLine then
 			addon:StealBar(self,_G["CoolLine"],self.db.bars.CoolLine)
 		end
+		
 		addon:makeAuraFrame(self,{"Buffs","Debuffs"})
 	end
 
---=====================================--
+------------------
 --	PET 
---=====================================--
-	
 	if unit == "pet" then
 		power.colorPower = true
 		power.colorHappiness = true
 		addon:makeAuraFrame(self,{"Buffs"})
---		makeComboPoints(self,"RIGHT","LEFT",-9, 3,38,"RIGHT")
 	end
---=====================================--
+------------------
 --	PET TARGET
---=====================================--
 	if unit == "pettarget" then
 		power.colorPower = true
 		addon:makeAuraFrame(self,{"Debuffs"})
---		makeComboPoints(self,"RIGHT","LEFT",-9, 3,38,"RIGHT")
 	end
---===========--
---	TARGET   --
---===========--
+------------------
+--	TARGET
 	if unit == "target" then
 		addon:makeAuraFrame(self,{"Debuffs","Buffs"})
 		makeComboPoints(self,"RIGHT","LEFT",-9, 3,38,"RIGHT")
 	end
-
---===========--
---	 FOCUS   --
---===========--
+------------------
+--	 FOCUS
 	if unit == "focus" then
 		addon:makeAuraFrame(self,{"Buffs","Debuffs"})
 	end
-
---=================--
---	 FOCUSTARGET   --
---=================--
+------------------
+--	 FOCUSTARGET
 	if unit == "focustarget" then
 	end	
-	
---=================--
---	 TARGETTARGET   --
---=================--
+------------------
+--	 TARGETTARGET
 	if unit == "targettarget" then
 	end	
-
---==============--
---	 CASTBARS   --
---==============--
+------------------
+--	 CASTBARS
 	if unit and  self.db.bars.Castbar and  self.db.bars.Castbar.enabled then
 		makeCastBar(self)
 	end
---===============--
---	 RANGEFADING   --
---===============--
+------------------
+--	 RANGEFADING
 	self.outsideRangeAlpha = self.db.range.outside
 	self.inRangeAlpha = self.db.range.inside
 	self.SpellRange = self.db.range.enabled
-	
---===================--
---	 AGRRO INDICATOR   --
---===================--
+------------------
+--	 AGRRO INDICATOR
 	  self.Banzai = updateBanzai
 	  self.BanzaiIndicator = self.Health:CreateTexture(nil, "OVERLAY")
 	  self.BanzaiIndicator:SetPoint("TOPRIGHT", self, 0, 0)
@@ -1094,25 +1170,19 @@ local layout = function(self, unit)
 	  self.BanzaiIndicator:SetWidth(4)
 	  self.BanzaiIndicator:SetTexture(1, .25, .25)
 	  self.BanzaiIndicator:Hide()
-
---=======================--
---	 DEBUFF HIGHLIGHTING   --
---=======================--
-
+------------------
+--	 DEBUFF HIGHLIGHTING
 	self.DebuffHighlightBackdrop = self.db.DebuffHighlight.Backdrop
 	self.DebuffHighlightUseTexture = self.db.DebuffHighlight.Icon
 	self.DebuffHighlightAlpha = self.db.DebuffHighlight.BackDropAlpha
 	self.DebuffHighlightFilter = self.db.DebuffHighlight.Filter
-	
 	local dbh = self.Health:CreateTexture(nil, "OVERLAY")
 			 dbh:SetWidth(16)
 			 dbh:SetHeight(16)
 			 dbh:SetPoint("CENTER", self, "CENTER")
 	self.DebuffHighlight = dbh
-		
---===============--
---	 EVENT HOOKS   --
---===============--
+------------------
+--	 EVENT HOOKS
 	self.OnSizeChange = UpDateFrameSize
 	self.SetAuraPosition = SetAuraPosition
 	self.PostCreateAuraIcon = PostCreateAuraIcon
@@ -1136,15 +1206,6 @@ local layout = function(self, unit)
 	return self
 end
 
-function addon:Debug(msg)
-	if not self.db.profile.enabledDebugMessages then return end
-	self:Print("|cFFFFFF00Debug : |r"..msg)
-end
-
-function addon:Error(msg)
-	self:Print("|cFFFF0000Error : |r"..msg)
-end
-
 function addon:HideBlizzard()
 	--[[
 		TODO: this toggles blizzard buff frame off.
@@ -1162,89 +1223,6 @@ function addon:HideBlizzard()
 	end
 end
 
-function addon:UpdateFontObject()
-end
-
-function addon:UpdateFontObjects(obj,size,name,outline)
-	local db = self.db.profile
-	
-	if obj~=nil and obj.FontObjects then	
-
-		for index,font in pairs(obj.FontObjects)do
-			if(font.object:GetObjectType() == "FontString")then
-				font.object:SetFont(addon.LSM:Fetch(addon.LSM.MediaType.FONT, db.frames.font.name),db.frames.font.size,db.frames.font.outline) 
-			end
-		end
-
-	else
-
-		if size~= nil then db.frames.font.size = size end
-		if name~= nil then db.frames.font.name = name end
-		if outline~= nil then db.frames.font.outline = outline end
-		
-		for index,frame in pairs(addon.units)do
-			if frame.unit ~= nil then 
-				self:UpdateFontObjects(frame)
-			end
-		end
-
-	end
-	
-end
-
-function addon:ImportSharedMedia()
-	if(self.LSM) then self.SharedMediaActive = true else return end
-	local db = self.db.profile
-
-	if(db.textures)then
-		if(db.textures.borders)then
-			for name,path in pairs(self.db.profile.textures.statusbars)do
-				self.LSM:Register(self.LSM.MediaType.STATUSBAR, name, path)
-			end
-		end
-	
-		if(db.textures.borders)then
-			for name,path in pairs(self.db.profile.textures.borders)do
-				self.LSM:Register(self.LSM.MediaType.BORDER, name, path)
-			end
-		end
-	end
-	
-	if(db.fonts)then
-		for name,data in pairs(db.fonts)do
-			self.LSM:Register(self.LSM.MediaType.FONT, name, data.name)
-		end
-	end
-end
-
-function addon:ProcessChatCmd(cmd)
-	if(cmd ~= "")then
-		local tokens = {}
-		for token in cmd:gmatch("%S+") do table.insert(tokens, token) end
-		if(tokens[1] == "msgtarget") then 
-			self.nextTargetUnit = UnitExists(tokens[2]) and tokens[2] or nil
-			self:Print("Cast Notification Rotation Target set to : "..tokens[2])
-		end
-	else
-		self:OpenConfig()
-	end
-end
-
-function addon:OpenConfig()
-	local aceCfg = LibStub("AceConfigDialog-3.0")
-	if(not IsAddOnLoaded(configName)) then
-		LoadAddOn(configName)
-		if(not IsAddOnLoaded(configName))then return end
-	end
-
-	if(aceCfg.OpenFrames[configName])then
-		aceCfg:Close(configName)
-	else
-		InterfaceOptionsFrame:Hide()
-		aceCfg:SetDefaultSize(configName, 700, 650)
-		aceCfg:Open(configName)
-	end
-end
 
 function addon:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New(layoutName.."DB",oUF_Smee_Settings)
@@ -1253,11 +1231,12 @@ function addon:OnInitialize()
 	self.Layout = layout
 	self:HideBlizzard()
 	self:ImportSharedMedia()
-	self:RegisterChatCommand("oufsmee", "ProcessChatCmd")
+	self:RegisterChatCommand("oufsmee", function() self:OpenConfig() end)
+	self:RegisterChatCommand("rl", function() ReloadUI() end)
 end
 
 function addon:OnEnable()
-	
+		
     -- Called when the addon is enabled
 	local db = self.db.profile
 	if not db.enabled then
@@ -1281,6 +1260,9 @@ function addon:OnEnable()
 		frame:SetPoint( data.anchorFromPoint, self.units[data.anchorTo] or UIParent, data.anchorToPoint, data.anchorX, data.anchorY)		
 		self.units[unit] = frame
 	end
+
+	self.MinimapIcon = LibStub("LibDBIcon-1.0")
+	self.MinimapIcon:Register(layoutName, ldb, db.minimapicon)
 
 end
 

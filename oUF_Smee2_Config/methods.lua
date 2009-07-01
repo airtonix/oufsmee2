@@ -112,9 +112,13 @@ end
 
 function configAddon:UpdateTextures(object,data)
 	local textures = addon.db.profile.textures
-	
+	local texture = addon.LSM:Fetch('statusbar',data.statusbar)
+
 	for bar,obj in pairs(object.bars)do 			
-		obj:SetStatusBarTexture(addon.LSM:Fetch('statusbar',data.statusbar))
+		obj:SetStatusBarTexture(texture)
+		if(bar == 'Castbar' and obj.SafeZone)then 
+			obj.SafeZone:SetTexture(texture)
+		end
 	end
 	
 end
@@ -215,8 +219,16 @@ function configAddon:SizeObject(object,settings,parent)
 	end
 end
 
-function configAddon:SetFontType(obj,size,name,outline)
-	addon:UpdateFontObjects(obj,size,name,outline)
+function configAddon:SetFontType(obj)
+	addon:UpdateFontObjects(obj)
+end
+
+function configAddon:SetDefaultFontType(size,name,outline)
+	local fontDb = db.frames.font
+	fontDb.size = size~=nil and size or fontDb.size
+	fontDb.name = name~=nil and name or fontDb.name
+	fontDb.outline = outline~=nil and outline or fontDb.outline
+	self:SetFontType()
 end
 
 function configAddon:SetAuraTimeFormat(value)
@@ -374,7 +386,8 @@ function configAddon:PositionFontObject(object,settings)
 	object:ClearAllPoints()
 	object:SetJustifyH(settings.justifyH)
 	object:SetJustifyV(settings.justifyV)
---	object:SetFont(db.fonts['default'].name, db.fonts['default'].size, db.fonts['default'].outline)
+--	local font,size,outline = object:GetFontObject()
+--	object:SetFont(settings.fonts.name, settings.fonts.size, settings.fonts.outline)
 	object:SetPoint(settings.anchorFromPoint, object.parent.elements[settings.anchorTo], settings.anchorToPoint, settings.anchorX, settings.anchorY)
 	self:Debug(' tag : '..settings.tag)
 	object.parent:Tag(object, settings.tag)	
@@ -407,9 +420,14 @@ function configAddon:getOptionValue(info)
 
 	self:Debug(parentKey,key,info['arg'])
 
-	if(key == "enabledDebugMessages")then
-		value = db.enabledDebugMessages				
+	value = db[key]
+
+	if( key == "minimapicon" )then
+		value = not db.minimapicon.hide
+	elseif key == "enabledDebugMessages" then
+		value = db.enabledDebugMessages
 	end
+	
 	if(parentKey == "font")then
 		if(info['arg']=='global-aura')then 
 			value = db.auras.font[key]
@@ -442,6 +460,13 @@ function configAddon:setOptionValue(info,value)
 	
 	if(key == "enabledDebugMessages")then
 		db.enabledDebugMessages = value
+	elseif key == "minimapicon" then
+		db.minimapicon.hide = not value
+		if(db.minimapicon.hide)then
+			self.addon.MinimapIcon:Hide(layoutName)
+		else
+			self.addon.MinimapIcon:Show(layoutName)
+		end
 	end
 
 	if(parentKey)then
@@ -452,21 +477,21 @@ function configAddon:setOptionValue(info,value)
 				if(info['arg']=='global-aura')then 
 					self:SetAuraFontOptions(nil,value,nil,nil)
 				else
-					self:SetFontType(nil,value,nil,nil)
+					self:SetDefaultFontType(value,nil,nil)
 				end
 			elseif(key == "name")then
 				--change fonttype
 				if(info['arg']=='global-aura')
 					then self:SetAuraFontOptions(nil,nil,value,nil)
 				else
-					self:SetFontType(nil,nil,value,nil)
+					self:SetDefaultFontType(nil,value,nil)
 				end
 			elseif(key == "outline")then
 				--change fontoutline
 				if(info['arg']=='global-aura')then
 					self:SetAuraFontOptions(nil,nil,nil,value) 
 				else
-					self:SetFontType(nil,nil,nil,value)
+					self:SetDefaultFontType(nil,nil,value)
 				end
 			end			
 		elseif(parentKey == "units")then
@@ -491,37 +516,40 @@ end
 -- GET--
 function configAddon:GetUnitFrameOption(info)
 	local object = info['arg']
-	local profile = object.db
+	local profile = addon.db.profile
 	local setting = info[#info]
-	local output 
+	local output = profile
 
-	if(#info >= 4)then output = profile end
-	if(#info >= 5)then output = output[info[4]] end	
-	if(#info >= 6)then output = output[info[5]] end
-	if(#info >= 7)then output = output[info[6]] end
-	if(#info >= 8)then output = output[info[7]] end
-	
-	output = output[setting]
+	for i=1,#info-1 do
+		if(info[i]~=nil and output ~=nil)then
+			output = output[info[i]];
+		end
+	end
 	
 	self:Debug("\nGetUnitFrameOption : "..self:concatLeaves(info))
-	return output
+	return output[setting]
+end
+
+function configAddon:CheckDebuffHighlighting(info)
+	self:Debug("\nCheckDebuffHighlighting : "..self:concatLeaves(info))
+	return not info['arg'].db.DebuffHighlight.enabled
 end
 
 function configAddon:ToggleDebuffHighlighting(frame,setting,value)
-	local db = self.addon.db.profile.frames[frame]
+	local unitDb = db.frames.units[frame.unit]
 
-	unit.DebuffHighlightBackdrop = db.DebuffHighlight.Backdrop
-	unit.DebuffHighlightUseTexture = db.DebuffHighlight.Icon
-
-
-	if(db.DebuffHighlight.Icon == true or db.DebuffHighlight.Backdrop == true)then
-		unit:EnableElement("DebuffHighlight")
+	if(not unitDb.DebuffHighlight.enabled)	then
+		frame:SetBackdropColor(unpack(db.colors.backdropColors))	
+		frame:SetBackdropBorderColor(unpack(db.colors.backdropColors))	
+		
+--		frame.DebuffHighlight:Hide() 
+		frame.DebuffHighlightBackdrop = false
+--		frame.DebuffHighlightUseTexture = false
 	else
-		unit:DisableElement("DebuffHighlight")
+		frame.DebuffHighlightBackdrop = unitDb.DebuffHighlight.Backdrop
+--		frame.DebuffHighlightUseTexture = unitDb.DebuffHighlight.Icon
 	end
 	
-	unit:UpdateElement("DebuffHighlight")
-
 end
 
 -- SET--
@@ -550,11 +578,13 @@ function configAddon:SetUnitFrameOption(info,value)
 			self:MoveObject(object,output)
 		end	
 	elseif info[#info-1]=="DebuffHighlight" then
+	
 		if setting == "Backdrop" then
 			output.Icon = not value
 		elseif setting == "Icon" then
 			output.Backdrop = not value
 		end
+
 		self:ToggleDebuffHighlighting(frame,setting,value)
 	elseif(setting == "growth-x" or setting == "growth-y") or (setting=="Colomns" or setting =="Rows" or setting =="size" or setting =="playerSize" or setting=="spacing")then
 		self:adjustAuraFrame(object,setting,value)
@@ -584,20 +614,26 @@ function configAddon:GetUnitFrameFontObjectOption(info)
 end
 
 function configAddon:SetUnitFrameFontObjectOption(info,value)
-	local object = info['arg']
-	local profile = object.db
+	local object = addon
+	local profile = addon.db.profile
 	local setting = info[#info]
-	local output 
-	self:Debug("\nSetUnitFrameFontObjectOption :\n "..self:concatLeaves(info))
-
-	if(#info >= 4)then output = profile; end
-	if(#info >= 5)then output = output[info[4]];object = object[info[4]]; end	
-	if(#info >= 6)then output = output[info[5]];object = object[info[5]]; end
-	if(#info >= 7)then output = output[info[6]];object = object[info[6]]; end
-	if(#info >= 8)then output = output[info[7]];object = object[info[7]]; end
-
+	local output = profile
+	local leafNumbers = #info-1
+	
+	for i=1,leafNumbers do
+		if(info[i]~=nil and output ~=nil)then
+			output = output[info[i]];
+			if(i < leafNumbers) then 
+				object = object[ info[i+1] ] 
+			end
+		end
+	end
 	output[setting] = value
+
 	self:PositionFontObject(object.object, output)
+	self:SetFontType(object.object)
+
+	self:Debug("\nSetUnitFrameFontObjectOption :\n "..self:concatLeaves(info))
 end
 
 -- Handling of the frames.units[unitName]

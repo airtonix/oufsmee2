@@ -16,7 +16,7 @@ h3. oUF_Smee2/core.lua
  This toggles blizzard buff frame off.
  It needs to be able to restore what it modifies.
 
-* Debuff Highlighting
+* Debuff Highlighting Options
  Doesn't toggle between icons and texture without a interface reload.
  
 * Status Icon Options
@@ -25,6 +25,17 @@ h3. oUF_Smee2/core.lua
 * TargetTarget doesn't always spawn.
 
 h2. Change Log
+
+v1.117 @ Tuesday, June 30 2009
+* Fixed incorrect ace3dialog & ace3config  library implementation
+* minmap & ldb modifier keys changed to match oufsmeegroups
+* minimap icon provided
+* it is now possible to configure fonttype, fontsize, fontoutline settings for individual font objects per frame, furthermore each font object can either follow custom rules or the global font rule.
+
+v1.116 @ Tuesday, June 30 2009
+* Castbar positioning fixed after channeling stopped.
+* Option to toggle debuff highlighting on or off.
+
 
 v1.115 @ Saturday, June 25 2009
 * factioncolour fontstring tag provided, fetchs colours from the global constant FACTION_BAR_COLORS.

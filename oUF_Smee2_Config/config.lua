@@ -10,6 +10,11 @@ config.options = {
 					type = 'toggle',
 					get = "getOptionValue", set = "setOptionValue",
 				},
+				["minimapicon"] = {
+					name = "Enable Minimap icon",desc = "Toggles on/off the minimap icon.",
+					type = 'toggle',
+					get = "getOptionValue", set = "setOptionValue",
+				},				
 				["frames"] = {
 					name = "Frames",	desc = "Frame Options ",
 					type = 'group',
@@ -413,7 +418,7 @@ function config:CreateBarOptions(groupName,frame)
 
 		})
 	end
-	
+	--[[
 	if(groupName == 'Power' or groupName == 'Health') then
 		config:TableExtend(optionGroup.args,{
 			["barColourRepresents"] = {
@@ -421,13 +426,13 @@ function config:CreateBarOptions(groupName,frame)
 				name = "Bar Colour Represents...",
 				desc = "What does the bar colour represent? That the unit is friendly, neutral or hostile? The type of class? If it's the powerbar should it represet the kind of power?'",
 				get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
-				values=function(groupName) return config.BarPowerColourRepresentTypes(groupName) end,
+				values = function(groupName) return config.BarPowerColourRepresentTypes(groupName) end,
 				arg = frame,
 				order=3,					
 			}
 		})
 	end
-	
+	--]]
 	if(groupName == 'Castbar') then
 		config:TableExtend(optionGroup.args,{
 			['Text'] = {
@@ -686,6 +691,8 @@ function config:AddTagOptionSet(tag,logic)
 end
 
 function config:AddUnitOptionSet(frame)
+	local frameDb = self.addon.db.profile.frames.units[frame.unit]
+	
 	local screenHeight = GetScreenHeight()
 	local screenWidth = GetScreenWidth()
 
@@ -703,20 +710,36 @@ function config:AddUnitOptionSet(frame)
 				name = "Debuff Highlighting",
 				order=1,
 				args={
+					["enabled"] = {
+						type = "toggle",
+						name = "Enable...", desc = "Enable the debuff icon or background highlighting",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						arg = frame,
+						order=1,
+					},
+					["headerMethod"] = {
+						type = "header",
+						name = "Method",
+						order=10,
+					},
 					["Backdrop"] = {
 						type = "toggle",
 						name = "Highlight Frame", desc = "Highlight the frame when the unit is affected by a removable debuff. Blue = Magic, Purple = Curse, Green = Poison, Brown/Yellow = Disease",
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckDebuffHighlighting',
 						arg = frame,
-						order=1,
+						order=11,
 					},
+--[[
 					["Icon"] = {
 						type = "toggle",
 						name = "Display Icon", desc = "Display an icon when the unit is affected by a removable debuff.",
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						disabled ='CheckDebuffHighlighting',
 						arg = frame,
-						order=1,
+						order=12,
 					},
+--]]
 				}
 			},
 			["headerSize"] = {
@@ -859,7 +882,7 @@ function config:AddUnitOptionSet(frame)
 			
 		},
 	}
-	for index,data in pairs(frame.db.FontObjects)do
+	for index,data in pairs(frameDb.FontObjects)do
 		local key = tostring(index)
 		if(key) then 
 			optionSet.args["FontObjects"].args[key] = {
@@ -878,7 +901,7 @@ function config:AddUnitOptionSet(frame)
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
 						disabled ='CheckUnitFrameOption',
 						values=config.frameAnchorPoints,
-						arg = frame,
+						arg = frameDb[index],
 						order=6,					
 					},
 					["anchorFromPoint"] = {
@@ -887,7 +910,7 @@ function config:AddUnitOptionSet(frame)
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
 						disabled ='CheckUnitFrameOption',
 						values = config.frameAnchorPoints,						
-						arg = frame,
+						arg = frameDb[index],
 						order = 7,
 					},
 					["justifyH"] = {
@@ -896,7 +919,7 @@ function config:AddUnitOptionSet(frame)
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
 						disabled ='CheckUnitFrameOption',
 						values = config.textHorizontalAlignmentPoints,
-						arg = frame,
+						arg = frameDb[index],
 						order = 7,
 					},
 					["justifyV"] = {
@@ -905,7 +928,7 @@ function config:AddUnitOptionSet(frame)
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
 						disabled ='CheckUnitFrameOption',
 						values = config.textVerticalAlignmentPoints,
-						arg = frame,
+						arg = frameDb[index],
 						order = 7,
 					},
 					["anchorX"] = {
@@ -913,7 +936,7 @@ function config:AddUnitOptionSet(frame)
 						name = "Horizontal Position", desc = "Set the Vertical position.",
 						min = -400, max = 400, step = 1,
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
-						arg = frame,
+						arg = frameDb[index],
 						order=21,
 					},
 					["anchorY"] = {
@@ -921,7 +944,7 @@ function config:AddUnitOptionSet(frame)
 						name = "Vertical Position", desc = "Set the Horizontal position.",
 						min = -400, max = 400, step = 1,
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
-						arg = frame,
+						arg = frameDb[index],
 						order=22,
 					},
 					["tag"] = {
@@ -929,9 +952,44 @@ function config:AddUnitOptionSet(frame)
 						name = "oUF Tag", desc = "Tag representing logic to display.",
 						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
 						usage = "[tagname] [tagname]",
-						arg = frame,
+						arg = frameDb[index],
 						width = "full",
 						order=32,
+					},
+					["headerFontStyle"] = {
+						type = "header",
+						name = "Font Style",
+						order=100,
+					},
+					["custom"] = {
+						type = "toggle",
+						name = "custom settings...", desc = "Use custom settings here or use global font settings?",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameOption',
+						arg = frame,
+						order=101,
+					},
+					["size"] = {
+						name = "Font Size",desc = "Change the font size, note this is affected by your ui-scale in video settings.",
+						type = "range", min = 1,max = 48.0, step = 0.1, 
+						order = 103,arg = frameDb[index],
+						get = "GetUnitFrameOption",	set = "SetUnitFrameFontObjectOption",
+					},
+					["name"] = {
+						type = "select",
+						name = "Fontface",
+						dialogControl = 'LSM30_Font',						disabled = not config.addon.SharedMediaActive,		 				desc = "Fontface to use on the bars.",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
+						disabled ='CheckUnitFrameOption',
+ 						values = AceGUIWidgetLSMlists.font,
+						order=106,
+					},						
+					["outline"] = {
+						type = "select",
+						name = "Outline", desc = "font options, typically outline types",
+						get = 'GetUnitFrameOption', set = 'SetUnitFrameFontObjectOption',
+						disabled ='CheckUnitFrameOption',
+						values = config.fontOutlineTypes,	
+						order = 107,
 					},
 				}
 			}

@@ -3,10 +3,10 @@
 ## Notes: layout for oUF.
 ## Author: z.jiricek
 ## X-eMail: zenobius.jiricek@gmail.com
-## Version: 30101.12
+## Version: 30101.17
 
 ## SavedVariables: oUF_Smee2DB
-## OptionalDeps: Ace3, SharedMedia, oUF_PowerSpark, oUF_Banzai, oUF_Smooth, oUF_CombatFeedback, oUF_HealComm, oUF_DebuffHighlight, oUF_SpellRange, oUF_ReadyCheck, oUF_TagEditor
+## OptionalDeps: oUF_HealComm
 ## DefaultState: enabled
 ## X-oUF: Smee2_oUFEmbed
 

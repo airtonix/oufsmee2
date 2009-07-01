@@ -1,5 +1,9 @@
 oUF_Smee_Settings = {
 	profile = {
+		minimapicon = {
+			hide = false,
+			minimapPos = 225,
+		},
 		enabledDebugMessages = false,
 		enabled = true,		
 		hideBlizzard = {
@@ -139,11 +143,10 @@ oUF_Smee_Settings = {
 							justifyV = "TOP",
 							tag = "[status] [name]",
 							desc = "Name",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						HealthText ={
 							enabled = true,
@@ -156,11 +159,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[curhp]",
 							desc = "Health",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						PowerText ={
 							enabled = true,
@@ -173,11 +175,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[curpp]",
 							desc = "Power",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						ThreatText = {
 							enabled = true,
@@ -190,11 +191,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[threat]",
 							desc = "Threat Levels",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						CombatFeedbackText = {
 							enabled = true,
@@ -207,11 +207,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "",
 							desc = "Combat Feedback Text",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 					},
 					bars = {
@@ -219,7 +218,7 @@ oUF_Smee_Settings = {
 							enabled = true,
 							dependantOnFrameSize = true,
 							classFilter = false,
-							reverse = true,
+							reverse = false,
 							width = 100,
 							height = 80,
 							colorDisconnected = true,
@@ -270,11 +269,10 @@ oUF_Smee_Settings = {
 									y = 0,
 									width=16.5,
 									height=100,
-									font = {
-										size = 8.5,
-										name = 'default',
-										outline = '',
-									}
+									custom = false,
+									size = 8.5,
+									name = 'default',
+									outline = '',
 								},
 								[2] = {
 									anchorToPoint="RIGHT",
@@ -284,11 +282,10 @@ oUF_Smee_Settings = {
 									y = 0,
 									width=16.5,
 									height=100,
-									font = {
-										size = 8.5,
-										name = 'default',
-										outline = '',
-									}
+									custom = false,
+									size = 8.5,
+									name = 'default',
+									outline = '',
 								},
 								[3] = {
 									anchorToPoint="RIGHT",
@@ -298,11 +295,10 @@ oUF_Smee_Settings = {
 									y = 0,
 									width=16.5,
 									height=100,
-									font = {
-										size = 8.5,
-										name = 'default',
-										outline = '',
-									}
+									custom = false,
+									size = 8.5,
+									name = 'default',
+									outline = '',
 								},
 								[4] = {
 									anchorToPoint="RIGHT",
@@ -312,11 +308,10 @@ oUF_Smee_Settings = {
 									y = 0,
 									width=16.5,
 									height=100,
-									font = {
-										size = 8.5,
-										name = 'default',
-										outline = '',
-									}
+									custom = false,
+									size = 8.5,
+									name = 'default',
+									outline = '',
 								},
 								[5] = {
 									anchorToPoint="RIGHT",
@@ -326,11 +321,10 @@ oUF_Smee_Settings = {
 									y = 0,
 									width=16.5,
 									height=100,
-									font = {
-										size = 8.5,
-										name = 'default',
-										outline = '',
-									}
+									custom = false,
+									size = 8.5,
+									name = 'default',
+									outline = '',
 								},
 								[6] = {
 									anchorToPoint="RIGHT",
@@ -340,11 +334,10 @@ oUF_Smee_Settings = {
 									height=100,
 									x = 1,
 									y = 0,
-									font = {
-										size = 8.5,
-										name = 'default',
-										outline = '',
-									}
+									custom = false,
+									size = 8.5,
+									name = 'default',
+									outline = '',
 								},
 							},
 							bgColor = {1,1,1,.3},
@@ -374,11 +367,10 @@ oUF_Smee_Settings = {
 								anchorTo = "totem.icon",
 								anchorX = -2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 							bgColor = {1,1,1,.3},
 							StatusBarColor = {0.25,0.25,0.25,1},
@@ -426,11 +418,10 @@ oUF_Smee_Settings = {
 								anchorTo = "Castbar",
 								anchorX = 2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 							Time = {
 								justifyH = "RIGHT",
@@ -440,11 +431,10 @@ oUF_Smee_Settings = {
 								anchorTo = "Castbar",
 								anchorX = -2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 						},
 						CoolLine = {
@@ -468,9 +458,10 @@ oUF_Smee_Settings = {
 					},
 					DebuffHighlight = {
 						Backdrop = true,
+						Icon = false,
 						BackDropAlpha = 1,
 						Filter = false,
-						Icon = false,
+						enabled = true,
 					},					
 					disallowVehicleSwap = true,
 					Buffs = {
@@ -554,11 +545,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[difficulty][shortclassification][level] [factioncolour][abbreviatedname] [dead]",
 							desc = "Name",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						HealthText ={
 							enabled = true,
@@ -571,11 +561,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[perhp]%",
 							desc = "Health",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						PowerText ={
 							enabled = true,
@@ -588,11 +577,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[curpp]",
 							desc = "Power",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						ThreatText = {
 							enabled = true,
@@ -605,11 +593,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[threat]",
 							desc = "Threat Level",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						CombatFeedbackText = {
 							enabled = true,
@@ -622,11 +609,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "",
 							desc = "Combat Feedback Text",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 					},
 					bars = {
@@ -700,11 +686,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "LEFT",
 								anchorX = 2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 							Time = {
 								justifyH = "RIGHT",
@@ -713,11 +698,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "RIGHT",
 								anchorX = -2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 						},
 					},
@@ -726,6 +710,7 @@ oUF_Smee_Settings = {
 						Icon = false,
 						BackDropAlpha = 1,
 						Filter = false,
+						enabled = true,
 					},					
 					disallowVehicleSwap = true,
 					Buffs = {
@@ -784,8 +769,8 @@ oUF_Smee_Settings = {
 					anchorToPoint = "TOPLEFT",
 					anchorX = 0,
 					anchorY = 15,
-					width =165,
-					height = 15,
+					width = 166,
+					height = 18,
 					scale = 1,
 					range = {
 						enabled = true,
@@ -809,11 +794,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[difficulty][shortclassification][level] [factioncolour][abbreviatedname] [dead]",
 							desc = "Name",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						HealthText ={
 							enabled = true,
@@ -826,11 +810,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[perhp]%",
 							desc = "Health",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						PowerText = {
 							enabled = false,
@@ -843,11 +826,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[curpp]",
 							desc = "Power",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						ThreatText = {
 							enabled = true,
@@ -860,11 +842,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[threat]",
 							desc = "Threat Level",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						CombatFeedbackText = {
 							enabled = true,
@@ -877,11 +858,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "",
 							desc = "Combat Feedback Text",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 					},
 					bars = {
@@ -928,7 +908,7 @@ oUF_Smee_Settings = {
 							anchorX = 0,
 							anchorY = 0,
 							height = 19,
-							width = 170,
+							width = 172,
 							frameStrata = "BACKGROUND",
 							frameLevel = 1,
 							bgColor = {1,1,1,.3},
@@ -956,11 +936,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "TOPLEFT",
 								anchorX = 2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 							Time = {
 								justifyH = "RIGHT",
@@ -969,11 +948,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "TOPRIGHT",
 								anchorX = -2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 						},
 					},
@@ -982,6 +960,7 @@ oUF_Smee_Settings = {
 						Icon = false,
 						BackDropAlpha = 1,
 						Filter = false,
+						enabled = true,
 					},					
 					disallowVehicleSwap = true,
 					Buffs = {
@@ -1065,11 +1044,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[difficulty][shortclassification][level] [factioncolour][abbreviatedname] [dead]",
 							desc = "Name",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						HealthText ={
 							enabled = true,
@@ -1082,11 +1060,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[missinghp][perhp]%",
 							desc = "Health",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						PowerText ={
 							enabled = true,
@@ -1099,11 +1076,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[perpp]%",
 							desc = "Power",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						ThreatText = {
 							enabled = true,
@@ -1116,11 +1092,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[threat]",
 							desc = "Threat Level",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						CombatFeedbackText = {
 							enabled = true,
@@ -1133,11 +1108,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "",
 							desc = "Combat Feedback Text",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 					},
 					bars = {
@@ -1183,8 +1157,8 @@ oUF_Smee_Settings = {
 							anchorToPoint = "CENTER",
 							anchorX = 0,
 							anchorY = 0,
-							height = 31,
-							width = 238,
+							height = 28,
+							width = 236,
 							frameStrata = "BACKGROUND",
 							frameLevel = 1,
 							bgColor = {1,1,1,.3},
@@ -1212,11 +1186,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "LEFT",
 								anchorX = 2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 							Time = {
 								justifyH = "RIGHT",
@@ -1225,11 +1198,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "RIGHT",
 								anchorX = -2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 						},
 					},
@@ -1238,6 +1210,7 @@ oUF_Smee_Settings = {
 						Icon = false,
 						BackDropAlpha = 1,
 						Filter = false,
+						enabled = true,
 					},					
 					disallowVehicleSwap = true,
 					Buffs = {
@@ -1296,8 +1269,8 @@ oUF_Smee_Settings = {
 					anchorToPoint = "TOPRIGHT",
 					anchorX = 0,
 					anchorY = 15,
-					width = 165,
-					height = 15,
+					width = 166,
+					height = 18,
 					scale = 1,
 					range = {
 						enabled = true,
@@ -1321,11 +1294,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[difficulty][shortclassification][level] [factioncolour][abbreviatedname] [dead]",
 							desc = "Name",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						HealthText ={
 							enabled = true,
@@ -1338,11 +1310,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag =  "[perhp]%",
 							desc = "Health",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						PowerText ={
 							enabled = true,
@@ -1355,11 +1326,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[curpp]",
 							desc = "Power",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						ThreatText = {
 							enabled = true,
@@ -1372,11 +1342,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[threat]",
 							desc = "Threat Level",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						CombatFeedbackText = {
 							enabled = true,
@@ -1389,11 +1358,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "",
 							desc = "Combat Feedback Text",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 					},
 					bars = {
@@ -1464,28 +1432,26 @@ oUF_Smee_Settings = {
 							Text = {
 								justifyH = "LEFT",
 								justifyV = "MIDDLE",
-								anchorFromPoint = "LEFT",
-								anchorToPoint = "LEFT",
+								anchorFromPoint = "BOTTOMLEFT",
+								anchorToPoint = "TOPLEFT",
 								anchorX = 2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 							Time = {
 								justifyH = "RIGHT",
 								justifyV = "MIDDLE",
-								anchorFromPoint = "RIGHT",
-								anchorToPoint = "RIGHT",
+								anchorFromPoint = "BOTTOMRIGHT",
+								anchorToPoint = "TOPRIGHT",
 								anchorX = -2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 						},
 					},
@@ -1494,6 +1460,7 @@ oUF_Smee_Settings = {
 						Icon = false,
 						BackDropAlpha = 1,
 						Filter = false,
+						enabled = true,
 					},					
 					disallowVehicleSwap = true,
 					Buffs = {
@@ -1576,11 +1543,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[level] [name] [dead]",
 							desc = "Name",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						HealthText ={
 							enabled = true,
@@ -1588,16 +1554,14 @@ oUF_Smee_Settings = {
 							anchorTo = "Health",
 							anchorFromPoint = "RIGHT",
 							anchorX = -4,
-							anchorY = 1,
+							anchorY = 0,
 							justifyH = "RIGHT",
 							justifyV = "MIDDLE",
 							tag =  "[perhp]%",
 							desc = "Health",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							size = 7,
+							name = 'default',
+							outline = '',
 						},
 						PowerText ={
 							enabled = true,
@@ -1605,16 +1569,14 @@ oUF_Smee_Settings = {
 							anchorTo = "Health",
 							anchorFromPoint = "LEFT",
 							anchorX = 4,
-							anchorY = 1,
+							anchorY = 0,
 							justifyH = "LEFT",
 							justifyV = "MIDDLE",
 							tag = "[perpp]%",
 							desc = "Power",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							size = 7,
+							name = 'default',
+							outline = '',
 						},
 						ThreatText = {
 							enabled = true,
@@ -1627,11 +1589,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[threat]",
 							desc = "Threat Level",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						CombatFeedbackText = {
 							enabled = true,
@@ -1644,11 +1605,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "",
 							desc = "Combat Feedback Text",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 					},
 					barFading = false,
@@ -1724,11 +1684,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "LEFT",
 								anchorX = 2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 							Time = {
 								justifyH = "RIGHT",
@@ -1737,11 +1696,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "RIGHT",
 								anchorX = -2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 						},
 					},
@@ -1750,6 +1708,7 @@ oUF_Smee_Settings = {
 						Icon = false,
 						BackDropAlpha = 1,
 						Filter = false,
+						enabled = true,
 					},					
 					disallowVehicleSwap = true,
 					Buffs = {
@@ -1830,11 +1789,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[difficulty][shortclassification][level] [factioncolour][abbreviatedname] [dead]",
 							desc = "Name",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						HealthText ={
 							enabled = true,
@@ -1847,11 +1805,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag =  "[perhp]%",
 							desc = "Health",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						PowerText ={
 							enabled = true,
@@ -1864,11 +1821,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[perpp]%",
 							desc = "Power",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						ThreatText = {
 							enabled = true,
@@ -1881,11 +1837,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "[threat]",
 							desc = "Threat Level",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 						CombatFeedbackText = {
 							enabled = true,
@@ -1898,11 +1853,10 @@ oUF_Smee_Settings = {
 							justifyV = "MIDDLE",
 							tag = "",
 							desc = "Combat Feedback Text",
-							font = {
-								size = 8.5,
-								name = 'default',
-								outline = '',
-							}
+							custom = false,
+							size = 8.5,
+							name = 'default',
+							outline = '',
 						},
 					},
 					barFading = false,
@@ -1978,11 +1932,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "LEFT",
 								anchorX = 2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 							Time = {
 								justifyH = "RIGHT",
@@ -1991,11 +1944,10 @@ oUF_Smee_Settings = {
 								anchorToPoint = "RIGHT",
 								anchorX = -2,
 								anchorY = 0,
-								font = {
-									size = 8.5,
-									name = 'default',
-									outline = '',
-								}
+								custom = false,
+								size = 8.5,
+								name = 'default',
+								outline = '',
 							},
 						},
 					},
@@ -2004,6 +1956,7 @@ oUF_Smee_Settings = {
 						Icon = false,
 						BackDropAlpha = 1,
 						Filter = false,
+						enabled = true,
 					},					
 					disallowVehicleSwap = true,
 					Buffs = {

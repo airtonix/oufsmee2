@@ -3,7 +3,7 @@
 ## Notes: layout for oUF.
 ## Author: z.jiricek
 ## X-eMail: zenobius.jiricek@gmail.com
-## Version: 30101.12
+## Version: 30101.17
 
 
 ## RequiredDeps:  oUF_Smee2
@@ -13,12 +13,8 @@
 
 embeds.xml
 
-
 core.lua
 methods.lua
 config.lua
 spellIconTextures.lua
-
-indicators\tags.lua
-indicators\indicators.lua
 

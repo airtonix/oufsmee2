@@ -1,4 +1,7 @@
-if not oUF then return end
+local parent = debugstack():match[[\AddOns\(.-)\]]
+local global = GetAddOnMetadata(parent, 'X-oUF')
+assert(global, 'X-oUF needs to be defined in the parent add-on.')
+local oUF = _G[global]
 
 local GetTime = GetTime
 local UnitMana = UnitMana
@@ -249,7 +252,6 @@ local function reapplySettings(object)
 	if not s then error("The object passed to oUF_PowerSpark_ReapplySettings must have a Spark") return end -- object must have Spark
 	obj = object
 	spark = object.Spark
-	s:ClearAllPoints()
 	spark_SetPoint = s.SetPoint
 	bar = s:GetParent() or object.Power -- default to object.Power if someone fucks up and don't parent their spark to something
 	barWidth = bar:GetWidth()
@@ -276,6 +278,24 @@ local function addTicker(object)
 	reapplySettings(object)
 	timer = 0
 	addon = CreateFrame("Frame")
+	object.UpdateSpark = reapplySettings
+	-- UnitGUID("player") don't work right away at login
+	if IsLoggedIn() then
+		OnEventOther(addon, "UNIT_DISPLAYPOWER", "player")
+	else
+		addon:SetScript("OnEvent", OnEventOther)
+		addon:RegisterEvent("PLAYER_ENTERING_WORLD")
+	end
+end
+
+local function Enable(self,unit)
+	if not (unit == 'player') then return end
+	if addon then return end -- Only one spark is supported.
+	if self.unit ~= unit then return end
+	self.UpdateSpark = reapplySettings
+	
+	timer = 0
+	addon = CreateFrame("Frame")
 	-- UnitGUID("player") don't work right away at login
 	if IsLoggedIn() then
 		OnEventOther(addon, "UNIT_DISPLAYPOWER", "player")
@@ -291,3 +311,5 @@ end
 if addTicker() then -- if addTicker() returns true no Spark was found
 	oUF:RegisterInitCallback(addTicker)
 end
+
+--oUF:AddElement(''Spark', Update, Enable, Disable)
